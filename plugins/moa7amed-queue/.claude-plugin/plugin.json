@@ -1,6 +1,6 @@
 {
   "name": "moa7amed-queue",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Intelligent AI Coding Task Orchestrator. Queue. Route. Execute. Verify. Prompts become persistent tasks that an external runner executes one at a time, each on the Claude model its difficulty calls for, with locking, crash recovery, dependencies, retries and git tracking.",
   "author": {
     "name": "moa7amed",
@@ -11,6 +11,7 @@
   "repository": "https://github.com/moa7amed/moa7amed-tools",
   "license": "MIT",
   "icon": "./assets/icon.png",
+  "privacyPolicyUrl": "https://github.com/moa7amed/moa7amed-tools/blob/main/docs/security-and-privacy.md",
   "keywords": [
     "queue",
     "tasks",

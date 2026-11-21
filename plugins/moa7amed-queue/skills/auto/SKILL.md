@@ -3,8 +3,8 @@ name: auto
 description: Turn on, pause or check Auto Queue for this project.
 argument-hint: "[status|enable|pause|resume|stop|disable|blockers|budget]"
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" auto*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" auto*)
 ---
 
 # Auto Queue

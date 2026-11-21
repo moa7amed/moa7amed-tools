@@ -4,8 +4,10 @@ description: Record the owner's explicit approval of a plan revision and its arc
 argument-hint: "<plan id> [ADR ids] [--decisions-only]"
 disable-model-invocation: true
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" project approve*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" project check*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" project approve*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" project check*)
 ---
 
 # Approve a plan

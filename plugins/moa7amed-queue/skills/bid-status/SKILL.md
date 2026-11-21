@@ -3,8 +3,10 @@ name: bid-status
 description: Show a bid's documents, requirements, compliance, pricing, approvals and outputs.
 argument-hint: "[bid id]"
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid checklist*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid status*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid checklist*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid status*)
 ---
 
 # Bid status

@@ -4,8 +4,10 @@ description: Keep a tender's clarification register, apply addenda without losin
 argument-hint: "<bid id> [addendum or clarification file]"
 disable-model-invocation: true
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid decision*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid doc*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid decision*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid doc*)
   - Read
 ---
 

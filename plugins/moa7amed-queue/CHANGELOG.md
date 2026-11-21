@@ -3,6 +3,28 @@
 Versions 0.1.0 and 0.2.0 were published as **claude-task-queue** with the command `ctq`;
 their entries below describe them under those names.
 
+## 0.9.1
+
+A fix to the prompt hook and changes for the Claude plugin directory. Queues, settings and
+data of 0.9.0 keep working; nothing to do.
+
+- Fixed: on the first run after an update, a `queue:` prompt now backs the data up itself
+  again when the queue data is small (up to 32 MB, well under a second to copy); with more
+  data the next command makes the backup before it writes, so the hook still answers within
+  Claude Code's time limit. In 0.9.0 the hook always left that backup to the next command,
+  and the test for it failed in CI.
+- Skills pre-approve only the moa7amed-queue commands they run (and, for grouped commands
+  such as `project` or `bid`, the actions), never the command with arbitrary arguments.
+- Skill front matter parses as strict YAML (`project-plan`'s description was ambiguous).
+- No shipped file contains a command that downloads and runs a program: the Playwright hint
+  in Replica and the replica-test skill link to Playwright's documentation instead.
+- `plugin.json` names a privacy document (`privacyPolicyUrl`, docs/security-and-privacy.md
+  in this repository); the README states that task sessions send their prompts to the
+  model provider under the user's Claude Code login.
+- docs/directory-submission.md lists the directory's findings: the four blocking ones are
+  publisher rules (hooks, `bin/`, shell pre-approvals and scripts need a Verified
+  organization); the plugin is not submitted and stays available from this marketplace.
+
 ## 0.9.0
 
 Auto Queue: install once, enable per project, submit with `queue:`, and the queue runs

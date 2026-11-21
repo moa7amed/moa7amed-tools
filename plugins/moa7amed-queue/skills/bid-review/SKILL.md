@@ -4,8 +4,12 @@ description: Independently review a tender response package - compliance, claims
 argument-hint: "<bid id>"
 disable-model-invocation: true
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid checklist*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid generate*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" bid review*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid checklist*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid generate*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" bid review*)
   - Read
 ---
 

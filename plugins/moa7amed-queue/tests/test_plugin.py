@@ -75,7 +75,27 @@ class PluginPackage(unittest.TestCase):
             self.assertIsNotNone(head, name)
             self.assertIn("name: %s\n" % name, head + "\n")
             self.assertRegex(head, r"(?m)^description: \S", name)
-            self.assertIn('Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)', head, name)
+            # Least privilege: a skill pre-approves only the commands (and, for grouped
+            # commands, the actions) that its own instructions run; never the command with
+            # arbitrary arguments, and the PowerShell rules mirror the Bash rules.
+            body = text.split("---", 2)[2]
+            bash = re.findall(r'(?m)^  - Bash\(sh "\$\{CLAUDE_PLUGIN_ROOT\}/bin/moa7amed-queue" '
+                              r'(.+)\*\)$', head)
+            power = re.findall(r'(?m)^  - PowerShell\(& "\$\{CLAUDE_PLUGIN_ROOT\}/bin/'
+                               r'moa7amed-queue\.cmd" (.+)\*\)$', head)
+            self.assertTrue(bash, name)
+            self.assertEqual(bash, power, name)
+            self.assertNotIn('moa7amed-queue" *)', head, name)
+            used = re.findall(r'bin/moa7amed-queue(?:\.cmd)?" (\w[\w-]*(?: [a-z][a-z-]*)?)', body)
+            for command in used:
+                self.assertTrue(any(command == rule or command.startswith(rule + " ")
+                                    or command.split(" ")[0] == rule for rule in bash),
+                                "%s runs `%s` but does not pre-approve it" % (name, command))
+            for rule in bash:
+                self.assertTrue(any(command == rule or command.startswith(rule + " ")
+                                    or command.split(" ")[0] == rule.split(" ")[0]
+                                    and " " not in rule and True for command in used),
+                                "%s pre-approves `%s` without using it" % (name, rule))
             # Every command a skill tells Claude to run must be a real command.
             commands = re.findall(r'bin/moa7amed-queue" (\w[\w-]*)', text)
             self.assertTrue(commands, name)

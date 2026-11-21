@@ -4,8 +4,10 @@ description: Start the runner that executes this project's queued tasks one at a
 argument-hint: "[--worktree] [--max-tasks N] [--watch] [--on-dirty stop|stash|allow] [--routing-mode POLICY] [--model NAME] [--permission-mode MODE] [--allowed-tools TOOLS] [--dry-run]"
 disable-model-invocation: true
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" launch*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" plan*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" launch*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" plan*)
 ---
 
 # Run the task queue

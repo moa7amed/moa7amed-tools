@@ -3,8 +3,8 @@ name: queue-add
 description: Queue a task for later instead of doing it now. Use when the user wants work queued, deferred, or done after the current task.
 argument-hint: "[--priority low|normal|high|urgent] [--after ID,ID] [--model opus|sonnet|haiku] <task prompt>"
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" add*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" add*)
 ---
 
 # Queue a task

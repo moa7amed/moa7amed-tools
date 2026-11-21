@@ -3,6 +3,65 @@
 Prepared for the owner. **Nothing has been submitted**, and no icon has been saved in the
 developer portal. Submitting is an owner action (steps at the end).
 
+**Status:** the portal's validation of `main @ ebbfa8e` (2026-11-21) reported 4 blocking
+findings, 3 warnings and 47 policy holds. The four blocking findings are publisher rules:
+command hooks, files in `bin/`, `allowed-tools` beyond Read/Grep/Glob/LS, and scripts are
+accepted only from a **Verified organization**. moa7amed-queue needs all four to work (the
+`queue:` capture hook, the command launchers, the skills that run the queue's commands, and
+the Python runner), so the full plugin cannot pass under an unverified publisher, whatever
+is changed in the code. The plugin stays available, unchanged in function, from this
+repository's own marketplace.
+
+## Findings and what was done
+
+| Finding (portal) | Kind | What it is at run time | Done | Remaining |
+| :-- | :-- | :-- | :-- | :-- |
+| Command hooks only from Verified organizations (`hooks/hooks.json`) | Publisher rule | The `queue:` capture hook (`UserPromptSubmit`) | Kept: it is the product's intake | Verified status |
+| Files in `bin/` only from Verified organizations | Publisher rule | The `moa7amed-queue` launchers the skills and runners call | Kept | Verified status |
+| `allowed-tools` beyond Read/Grep/Glob/LS only from Verified organizations (39 skills, one shown) | Publisher rule | Skills pre-approve the plugin's own command | Narrowed: each skill now pre-approves only the commands (and actions) it runs, never the command with arbitrary arguments; checked by `tests/test_plugin.py` | Verified status |
+| Files outside the allowed list only from Verified organizations | Publisher rule | Python sources, shell and PowerShell scripts, test fixtures | Kept (the plugin is these programs) | Verified status |
+| Pre-approves broad shell access (policy hold, 39) | Follows from the rule above | as above | Narrowed as above | Held until Verified |
+| `allowed-tools` holds a `$` (39) | Follows from the rule above | `${CLAUDE_PLUGIN_ROOT}` in the rules | Kept (the documented way to name plugin files) | Held until Verified |
+| Image or font file the plugin's code could run (policy hold, 3) | Probably the test fixtures (paths not shown in the portal) | DOCX, XLSX and PDF test fixtures are read as documents by the tests; nothing runs them. The only image, `assets/icon.png`, is checked: a plain PNG, nothing appended, named in no command (`tests/test_directory.py`) | Icon verified | Expanded report from the portal; see "Tests in the submission" |
+| Files the validator could not inspect (`tests/fixtures/bid/quotation-hardware.xlsx`) | Packaging | A test fixture | Kept | See "Tests in the submission" |
+| Scripts the validator could not follow (`hooks/capture-prompt.sh`) | Follows from the publisher rule | The capture hook script | Kept | Held until Verified |
+| Uses a credential from the user's machine (policy hold, 3) | Follows from refused code | The plugin reads two values from Claude Code's settings files (`availableModels`/`deniedModels`, a marketplace's `autoUpdate`) and passes the environment to the `claude` sessions it starts, as any program starting Claude Code does. It stores and logs none of it | Tested: a key in `settings.json` or the environment never reaches the plugin's results or files (`tests/test_directory.py`) | Held until Verified |
+| Contains a download-and-run command (warning, 2) | Defect | An install instruction for Playwright in an error message; `npx playwright test` in the replica-test skill | Fixed: both replaced by links to Playwright's documentation; a test fails if such a command returns | Re-validation |
+| Field from another tool's manifest: `icon` (warning) | Notice | The directory reads it for the listing | Kept, as the portal says ("no action needed"); `privacyPolicyUrl` added the same way | — |
+| Hook written as one line, not `command` and `args` (info) | Portability notice | `sh "${CLAUDE_PLUGIN_ROOT}/hooks/capture-prompt.sh"` | Kept: Claude Code runs the one-line `sh` form through Git Bash on Windows, while the `args` form only starts where Windows finds `sh` on PATH (the portal's own explanation) | — |
+| Frontmatter value may be misread (`project-plan`, info) | Defect | `description` contained `: ` unquoted | Fixed: quoted (also `help`); every skill now parses as strict YAML, checked by a test | Re-validation |
+| Images and fonts passed without a code check (`assets/icon.png`, info) | Notice | The listing icon | — | — |
+
+The portal shows a sample of files per finding; it offers no export of the full report
+(not documented). The "image or font" holds name no paths in the screenshot: confirm them in
+the portal's expanded rows.
+
+### Routes considered
+
+- **A. Full plugin from a Verified organization (preferred).** The portal offers **Request
+  verified** (Submissions → Help and appeals). Anthropic's documentation names two
+  requirements, a paid plan and a proven domain, and says a person at Anthropic decides; it
+  does not document whether an individual account can be verified, how a domain is proven,
+  or what verification changes for plugins. A personal paid plan alone does not make an
+  organization Verified.
+- **B. A separate instruction-only edition.** Not built. Without hooks, launchers and the
+  runner it could not save, persist, route or execute anything; it would be a different
+  product under a similar name, and the skills would have nothing to call. It may be worth
+  designing later as its own product (for example a planning or review method that works
+  with Claude's read-only tools), not as a stand-in for moa7amed-queue.
+- **C. Keep distributing the full plugin from this marketplace.** In effect now:
+  `claude plugin marketplace add moa7amed/moa7amed-tools`.
+
+### Tests in the submission
+
+The directory scans the selected folder (`plugins/moa7amed-queue`) and some repository-wide
+properties (archive size, file count, the root `.gitattributes`); no way to exclude paths
+inside the folder is documented. The test suite (with its DOCX, XLSX and PDF fixtures) lives
+in that folder today. Moving it out of the plugin folder would remove those files from the
+scanned bundle and from installed copies without weakening any test, but it changes how the
+suite, CI and the release checks find the plugin; it is worth doing together with the
+verified submission, not as a way around the publisher rules.
+
 ## Listing
 
 | Field | Value |
@@ -67,7 +126,9 @@ portal, and that changing it later does not change the listing icon.
 
 - Stored locally only, in the user's data folder (`~/.moa7amed-queue`): queued prompts,
   acceptance criteria, results, run logs, costs as reported by Claude Code, project plans and
-  bid/replica records. Nothing is sent anywhere by the plugin. See
+  bid/replica records. The plugin itself opens no network connection; the Claude Code
+  sessions it starts send their task prompts to the configured model provider under the
+  user's login, and Replica's optional capture loads the URLs the owner names. See
   [security-and-privacy.md](security-and-privacy.md).
 - Personal data: only what users put into their own prompts and documents. No accounts, no
   analytics, no retention outside the user's machine.
@@ -90,14 +151,19 @@ portal, and that changing it later does not change the listing icon.
 
 ## Owner steps (not done)
 
-1. Sign in at https://claude.ai/directory/manage with a paid plan (Pro, Max, Ultra; on Team or
-   Enterprise an Owner, or a role with the Directory permission).
-2. **Submit new → Plugin bundle.**
-3. Source: `moa7amed/moa7amed-tools`, plugin path `plugins/moa7amed-queue`, branch `main`.
-4. Check the icon preview before saving (see the note above), then fill in the data-handling
-   questions and the compliance acknowledgements with the contact address above.
+1. Ask for Verified status: https://claude.ai/directory/manage → **Submissions** → **Help
+   and appeals** → **Request verified** (a paid plan and a proven domain; Anthropic decides).
+   Questions: directory@anthropic.com.
+2. Until then, the portal's four blocking findings stay; do not submit.
+3. After verification (and after the current version is on `main`, since the portal scans
+   the default branch): **Submit new → Plugin bundle**, source `moa7amed/moa7amed-tools`,
+   plugin path `plugins/moa7amed-queue`, branch `main`; **Validate**, then review the
+   remaining holds.
+4. Check the icon preview before saving (see the note above), then fill in the
+   data-handling questions and the compliance acknowledgements with the contact address
+   above.
 5. Submit. Every version is validated and scanned automatically; a person reviews a new
-   listing before it goes live. Review time is not fixed. Questions: directory@anthropic.com.
+   listing before it goes live. Review time is not fixed.
 
 Sources (read 2026-11-21): https://code.claude.com/docs/en/plugins/publish,
 https://claude.com/docs/plugins/submit, https://claude.com/docs/plugins/pre-submission-checklist,

@@ -202,9 +202,10 @@ A task stopped by its budget is not retried automatically.
 
 ### Security and privacy
 
-Everything stays on your machine, in `~/.moa7amed-queue`. The plugin makes no network
-connection itself and has no telemetry. Tasks run unattended under the permission mode
-you choose (default `acceptEdits`). Details: [docs/security-and-privacy.md](docs/security-and-privacy.md).
+Queue data is stored on your machine, in `~/.moa7amed-queue`. The plugin itself opens no
+network connection and has no telemetry; the Claude Code sessions it starts for tasks send
+their prompts to the model provider under your Claude Code login, as any Claude Code session
+does. Tasks run unattended under the permission mode you choose (default `acceptEdits`). Details: [docs/security-and-privacy.md](docs/security-and-privacy.md).
 
 ### Limitations
 
@@ -298,7 +299,7 @@ tests/                             checks for the marketplace as a whole
 | [Multi-agent execution](docs/agents.md) | Stage A: when agents run, enforcement, recovery, budgets |
 | [Challenge, discuss, then execute](docs/challenge.md) | Concerns, the owner's decisions, and what they cannot change |
 | [Auto Queue](docs/auto-queue.md) | Opt-in automatic runner per project: consent, pause, stop, idle timeout, allowance |
-| [Directory submission](docs/directory-submission.md) | Listing materials for the Claude plugin directory (prepared, not submitted) |
+| [Directory submission](docs/directory-submission.md) | Listing materials and the directory's findings (not submitted; the full plugin needs a Verified organization) |
 | [Changelog](plugins/moa7amed-queue/CHANGELOG.md) | What changed in each version |
 | [Security and privacy](docs/security-and-privacy.md) | What is stored, started and sent |
 | [Contributing](CONTRIBUTING.md) | Where to start |

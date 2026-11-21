@@ -436,10 +436,9 @@ def capture(q, project_id, url=None, ref_id=None, width=1280, height=800, full_p
                                                       provenance="captured on request")["id"]
     available = tools(config)
     if not available["playwright"]:
-        reason = ("no browser automation: Playwright is not installed for %s. Install it "
-                  "(pip install playwright; python -m playwright install chromium), set "
-                  "replica_python to an interpreter that has it, or add screenshots by hand"
-                  % available["python"])
+        reason = ("no browser automation: Playwright is not installed for %s. Install it as "
+                  "described at https://playwright.dev/python/docs/intro, set replica_python to "
+                  "an interpreter that has it, or add screenshots by hand" % available["python"])
         if not candidate:
             with q.tx():
                 q.conn.execute("UPDATE replica_refs SET limitation=? WHERE project=? AND id=?",

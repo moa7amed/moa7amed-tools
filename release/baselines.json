@@ -7,6 +7,14 @@
       "cli": "scripts/mq.py",
       "update_in_place": true,
       "note": "the first public release (the first commit of the public history)"
+    },
+    {
+      "version": "0.9.0",
+      "commit": "ebbfa8eb58a392ce11a20247ad4a45e04a27efea",
+      "root": "plugins/moa7amed-queue",
+      "cli": "scripts/mq.py",
+      "update_in_place": true,
+      "note": "the previous public release"
     }
   ]
 }

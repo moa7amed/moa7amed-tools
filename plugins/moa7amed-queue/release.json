@@ -1,6 +1,6 @@
 {
   "name": "moa7amed-queue",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "channel": "stable",
   "data_format": "1",
   "reads_data_formats": ["1"],

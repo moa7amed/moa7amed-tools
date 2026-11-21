@@ -4,8 +4,12 @@ description: Verify a rebuild's features and flows with real tests and record th
 argument-hint: "<replica id> [JUnit report]"
 disable-model-invocation: true
 allowed-tools:
-  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)
-  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" *)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" replica report*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" replica status*)
+  - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" replica test*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" replica report*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" replica status*)
+  - PowerShell(& "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue.cmd" replica test*)
   - Read
 ---
 
@@ -21,9 +25,10 @@ against a mock is recorded as a mock; a clickable button proves nothing about th
 
 The plan's test task writes browser or API tests named with the feature and flow ids
 (`test_F3_filter_by_status`, `U1 find and open a shipment`), with "mock" in the name when
-they exercise a mock. The owner (or a queue task allowed to run commands) runs them with a
-JUnit report, for example `python -m pytest --junitxml=report.xml` or
-`npx playwright test --reporter=junit`.
+they exercise a mock. The owner (or a queue task allowed to run commands) runs them with the
+project's own test command and a JUnit report, for example `python -m pytest
+--junitxml=report.xml`, or the project's Playwright tests with the JUnit reporter
+(https://playwright.dev/docs/test-reporters#junit-reporter).
 
 ## 2. Record the results
 
