@@ -428,6 +428,28 @@ def update_commands(status):
 
 # --------------------------------------------------------------------------- health
 
+# The prompt hook makes the backup after an update itself only when the data is this small
+# (a copy then takes well under a second); otherwise it leaves it to the next command, which
+# makes it before writing anything. The hook has to answer within Claude Code's time limit.
+HOOK_BACKUP_LIMIT_BYTES = 32 * 1024 * 1024
+
+
+def quick_to_back_up(limit=None):
+    """True when the queue data is small enough to be backed up inside the prompt hook."""
+    limit = HOOK_BACKUP_LIMIT_BYTES if limit is None else limit
+    total = 0
+    for _name, folder, _root in _projects():
+        for base, _dirs, files in os.walk(folder):
+            for name in files:
+                try:
+                    total += os.path.getsize(os.path.join(base, name))
+                except OSError:
+                    pass
+                if total > limit:
+                    return False
+    return True
+
+
 def _projects():
     base = os.path.join(util.home(), "projects")
     found = []

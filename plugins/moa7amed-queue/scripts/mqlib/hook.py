@@ -321,9 +321,9 @@ def main():
         project = (_env("PROJECT") or os.environ.get("CLAUDE_PROJECT_DIR")
                    or payload.get("cwd"))
         root, start = util.resolve_project(project)
-        try:   # record the version; a backup after an update is left to the next command,
-            from . import maintenance   # which makes it before writing anything (bounded hook)
-            maintenance.note_version(backup=False)
+        try:   # as for every command: back the data up on the first run after an update, but
+            from . import maintenance   # only when that is quick; else the next command does it
+            maintenance.note_version(backup=maintenance.quick_to_back_up())
         except Exception:
             pass
         q = store.Queue(root, timeout=DB_WAIT_SECONDS)

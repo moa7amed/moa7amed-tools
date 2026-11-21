@@ -110,8 +110,9 @@ was saved and Claude also answered the prompt in the session, so the same reques
 twice. The plugin therefore:
 
 - keeps the hook short: waiting for the queue database is limited to 8 s, the workspace
-  check to 5 s, starting a runner to 12 s, and a backup after an update is left to the next
-  command (normally the hook answers in under 1.5 s);
+  check to 5 s, starting a runner to 12 s; the backup on the first run after an update is
+  made in the hook only when the queue data is small (up to 32 MB), otherwise by the next
+  command before it writes anything (normally the hook answers in under 1.5 s);
 - sets `onFailure: "block"` on its hook, so that Claude Code blocks the prompt instead of
   sending it when the hook fails or times out. Verified with Claude Code 2.1.329: the
   overrunning hook's prompt was not sent. Claude Code documents this setting from 2.1.295;

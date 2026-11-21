@@ -55,8 +55,9 @@ data of 0.8.0 keep working (one new, additive table), and going back to 0.8.0 is
 - `moa7amed-queue run --idle-timeout SECONDS` (with `--watch`) for runners you start
   yourself. `status` shows an `Auto` line when Auto Queue is on or paused.
 - The prompt hook is bounded well within Claude Code's 30 s limit (8 s for the queue
-  database, 5 s for the workspace check, 12 s for starting a runner; a backup after an update
-  is left to the next command) and carries `onFailure: "block"`: when it fails or runs out of
+  database, 5 s for the workspace check, 12 s for starting a runner; the backup after an
+  update is made in the hook only for up to 32 MB of queue data, otherwise by the next
+  command) and carries `onFailure: "block"`: when it fails or runs out of
   time, Claude Code blocks the prompt instead of also sending it to Claude (verified with
   2.1.329; documented from 2.1.295). A locked queue database is reported and the prompt is not
   saved and not sent.

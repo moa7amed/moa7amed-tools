@@ -581,6 +581,27 @@ class BackupOnUpdate(QueueTestCase):
         self.assertEqual(self.labels(), ["auto-update-from-0.3.0"])
         self.assertEqual(maintenance.list_backups()[0]["projects"][0]["tasks"], {"pending": 1})
 
+    def test_with_a_lot_of_data_the_hook_leaves_the_backup_to_the_next_command(self):
+        # The prompt hook must answer within Claude Code's time limit: with more data than
+        # it can copy quickly, it saves the task and the next command makes the backup.
+        self.add("some work")
+        self.ran_before_as("0.3.0")
+        wrapper = os.path.join(self.tmp, "hook_wrapper.py")
+        with open(wrapper, "w") as handle:
+            handle.write("import sys\nsys.path.insert(0, %r)\n"
+                         "from mqlib import hook, maintenance\n"
+                         "maintenance.HOOK_BACKUP_LIMIT_BYTES = 1\n"
+                         "sys.exit(hook.main())\n" % os.path.dirname(MQ))
+        payload = json.dumps({"session_id": "s", "cwd": self.project,
+                              "hook_event_name": "UserPromptSubmit",
+                              "prompt": "queue: one more thing"}).encode("utf-8")
+        result = subprocess.run([sys.executable, wrapper], input=payload,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.tmp)
+        self.assertIn("Queued as task #2", result.stdout.decode("utf-8"))
+        self.assertEqual(self.labels(), [])                    # not inside the hook
+        self.mq("status")
+        self.assertEqual(self.labels(), ["auto-update-from-0.3.0"])   # the next command did it
+
     def test_only_the_newest_automatic_backups_are_kept_and_manual_ones_always(self):
         self.add("some work")
         maintenance.create_backup(label="mine")
