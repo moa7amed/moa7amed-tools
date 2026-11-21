@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">How a queued task is executed (diagram)</title>
+  <desc id="desc">Diagram. A task is added and stored, routed to a model and a workflow, claimed by the single runner, optionally analysed by read-only agents, executed in a fresh Claude Code session, verified and committed. Deep material plans wait for the owner's approval. After a crash the next runner recovers the lock and requeues the interrupted task.</desc>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; fill: #0f172a; }
+    .mono { font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; }
+    .t { font-size: 19px; font-weight: 700; }
+    .s { font-size: 14.5px; fill: #334155; }
+    .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+    .opt { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1.5; stroke-dasharray: 6 4; }
+    .hold { fill: #fffbeb; stroke: #d97706; stroke-width: 1.5; }
+    .arrow { stroke: #475569; stroke-width: 2; fill: none; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="640" fill="#f8fafc"/>
+  <text x="40" y="52" font-size="26" font-weight="700">How a queued task is executed</text>
+  <text x="1240" y="52" font-size="15" fill="#64748b" text-anchor="end">Diagram · moa7amed-queue</text>
+
+  <!-- row 1 -->
+  <rect class="box" x="40" y="90" width="260" height="150" rx="12"/>
+  <text class="t" x="60" y="124">1  Queue</text>
+  <text class="s" x="60" y="152"><tspan class="mono">moa7amed-queue add</tspan>,</text>
+  <text class="s" x="60" y="174">a skill, or a message that</text>
+  <text class="s" x="60" y="196">starts with <tspan class="mono">queue:</tspan></text>
+  <text class="s" x="60" y="218">Stored verbatim, outside the project</text>
+
+  <rect class="box" x="345" y="90" width="260" height="150" rx="12"/>
+  <text class="t" x="365" y="124">2  Route</text>
+  <text class="s" x="365" y="152">Rules read the task: Haiku,</text>
+  <text class="s" x="365" y="174">Sonnet or Opus, and a QUICK,</text>
+  <text class="s" x="365" y="196">STANDARD or DEEP workflow.</text>
+  <text class="s" x="365" y="218">Your manual choice wins.</text>
+
+  <rect class="box" x="650" y="90" width="260" height="150" rx="12"/>
+  <text class="t" x="670" y="124">3  Claim</text>
+  <text class="s" x="670" y="152">One runner per project (lock).</text>
+  <text class="s" x="670" y="174">Priorities, dependencies and</text>
+  <text class="s" x="670" y="196">approvals are respected; git</text>
+  <text class="s" x="670" y="218">changes are never run over.</text>
+
+  <rect class="opt" x="955" y="90" width="285" height="150" rx="12"/>
+  <text class="t" x="975" y="124">4  Analyse (when justified)</text>
+  <text class="s" x="975" y="152">Read-only agents in separate</text>
+  <text class="s" x="975" y="174">sessions, at the same time, on</text>
+  <text class="s" x="975" y="196">a snapshot of HEAD. They only</text>
+  <text class="s" x="975" y="218">report; most tasks skip this.</text>
+
+  <path class="arrow" d="M300,165 L341,165"/>
+  <path class="arrow" d="M605,165 L646,165"/>
+  <path class="arrow" d="M910,165 L951,165"/>
+
+  <!-- row 2 -->
+  <rect class="box" x="955" y="300" width="285" height="150" rx="12"/>
+  <text class="t" x="975" y="334">5  Execute</text>
+  <text class="s" x="975" y="362">A fresh <tspan class="mono">claude -p</tspan> session on the</text>
+  <text class="s" x="975" y="384">chosen model, with a budget.</text>
+  <text class="s" x="975" y="406">The only session that writes.</text>
+  <text class="s" x="975" y="428">Model fallback and escalation.</text>
+
+  <rect class="box" x="650" y="300" width="260" height="150" rx="12"/>
+  <text class="t" x="670" y="334">6  Verify</text>
+  <text class="s" x="670" y="362">The session must report how</text>
+  <text class="s" x="670" y="384">it verified the result</text>
+  <text class="s" x="670" y="406">(<tspan class="mono">MQ_VERIFIED</tspan>); otherwise</text>
+  <text class="s" x="670" y="428">the task is not accepted.</text>
+
+  <rect class="box" x="345" y="300" width="260" height="150" rx="12"/>
+  <text class="t" x="365" y="334">7  Commit</text>
+  <text class="s" x="365" y="362">The changed files are</text>
+  <text class="s" x="365" y="384">committed; cost and outcome</text>
+  <text class="s" x="365" y="406">are recorded. The next task</text>
+  <text class="s" x="365" y="428">starts in a new session.</text>
+
+  <rect class="hold" x="40" y="300" width="260" height="150" rx="12"/>
+  <text class="t" x="60" y="334">When DEEP and material</text>
+  <text class="s" x="60" y="362">A planning session first,</text>
+  <text class="s" x="60" y="384">then the task waits for</text>
+  <text class="s" x="60" y="406"><tspan class="mono">workflow approve</tspan> by you</text>
+  <text class="s" x="60" y="428">before it may change code.</text>
+
+  <path class="arrow" d="M1097,240 L1097,296"/>
+  <path class="arrow" d="M955,375 L914,375"/>
+  <path class="arrow" d="M650,375 L609,375"/>
+
+  <!-- recovery band -->
+  <rect x="40" y="490" width="1200" height="112" rx="12" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text class="t" x="60" y="524">Crash, kill or reboot</text>
+  <text class="s" x="60" y="552">The next runner takes over the stale lock. An interrupted task goes back into the queue (or is held for review); a task that</text>
+  <text class="s" x="60" y="574">had already finished is recorded, not run again. <tspan class="mono">moa7amed-queue reconcile</tspan> shows anything left behind; nothing is discarded.</text>
+</svg>

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Backward-compatible alias of moa7amed-queue.
+# The command was called `ctq` in versions 0.1.0 and 0.2.0 (claude-task-queue);
+# scripts, shims and habits that use the old name keep working.
+# $0 may use backslashes when a Windows path is passed to sh.
+case $0 in *[/\\]*) here=${0%[/\\]*} ;; *) here=. ;; esac
+exec sh "$here/moa7amed-queue" "$@"

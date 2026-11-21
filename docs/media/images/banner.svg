@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="title desc">
+  <title id="title">moa7amed-queue: Queue. Route. Execute. Verify.</title>
+  <desc id="desc">Text wordmark of moa7amed-queue by moa7amed, with the four steps every task goes through: queue, route, execute, verify.</desc>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    .mono { font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; }
+  </style>
+  <rect width="1280" height="400" fill="#0f172a"/>
+  <text x="80" y="128" font-size="64" font-weight="700" fill="#f8fafc" class="mono">moa7amed-queue</text>
+  <text x="82" y="180" font-size="30" font-weight="600" fill="#5eead4">Queue. Route. Execute. Verify.</text>
+  <text x="82" y="226" font-size="20" fill="#cbd5e1">A persistent task queue for Claude Code. Each task runs in a fresh session,</text>
+  <text x="82" y="254" font-size="20" fill="#cbd5e1">on the model its difficulty calls for, and reports how it was verified.</text>
+  <g font-size="17">
+    <rect x="80" y="292" width="250" height="64" rx="10" fill="#1e293b" stroke="#334155"/>
+    <text x="100" y="319" font-weight="700" fill="#f8fafc">Queue</text>
+    <text x="100" y="342" fill="#94a3b8">stored verbatim, in order</text>
+    <rect x="346" y="292" width="250" height="64" rx="10" fill="#1e293b" stroke="#334155"/>
+    <text x="366" y="319" font-weight="700" fill="#f8fafc">Route</text>
+    <text x="366" y="342" fill="#94a3b8">Haiku, Sonnet or Opus</text>
+    <rect x="612" y="292" width="250" height="64" rx="10" fill="#1e293b" stroke="#334155"/>
+    <text x="632" y="319" font-weight="700" fill="#f8fafc">Execute</text>
+    <text x="632" y="342" fill="#94a3b8">one task at a time</text>
+    <rect x="878" y="292" width="250" height="64" rx="10" fill="#1e293b" stroke="#334155"/>
+    <text x="898" y="319" font-weight="700" fill="#f8fafc">Verify</text>
+    <text x="898" y="342" fill="#94a3b8">evidence before commit</text>
+  </g>
+  <text x="1200" y="128" font-size="18" fill="#94a3b8" text-anchor="end">by moa7amed</text>
+  <text x="1200" y="154" font-size="18" fill="#94a3b8" text-anchor="end">moa7amed.com</text>
+</svg>

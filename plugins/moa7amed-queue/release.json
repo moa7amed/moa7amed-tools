@@ -1,0 +1,18 @@
+{
+  "name": "moa7amed-queue",
+  "version": "0.8.0",
+  "channel": "stable",
+  "data_format": "1",
+  "reads_data_formats": ["1"],
+  "min_python": "3.8",
+  "tested_claude_code": "2.1.329",
+  "always_on_token_budget": 1200,
+  "isolation_env": {
+    "MOA7AMED_QUEUE_HOME": "{tmp}/queue-home"
+  },
+  "smoke": [
+    ["{python}", "-B", "scripts/mq.py", "--version"],
+    ["{python}", "-B", "scripts/mq.py", "doctor"],
+    ["{python}", "-B", "scripts/mq.py", "changelog"]
+  ]
+}

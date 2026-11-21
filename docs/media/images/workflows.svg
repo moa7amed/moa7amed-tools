@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560" role="img" aria-labelledby="title desc">
+  <title id="title">QUICK, STANDARD and DEEP workflows (diagram)</title>
+  <desc id="desc">Diagram. QUICK tasks such as text changes run one session with minimal requirements and always report verification. STANDARD tasks such as features plan lightly in the session, test and review by risk. DEEP tasks such as security or architecture changes get a separate planning session, read-only analysis agents when justified, owner approval when material, implementation, review and verification.</desc>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; fill: #0f172a; }
+    .mono { font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; }
+    .h { font-size: 24px; font-weight: 700; }
+    .e { font-size: 15px; fill: #475569; font-style: italic; }
+    .s { font-size: 16px; fill: #1e293b; }
+    .col { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+  </style>
+  <rect width="1280" height="560" fill="#f8fafc"/>
+  <text x="40" y="52" font-size="26" font-weight="700">The workflow fits the task</text>
+  <text x="1240" y="52" font-size="15" fill="#64748b" text-anchor="end">Diagram · moa7amed-queue</text>
+  <text x="40" y="82" font-size="16" fill="#475569">Decided by rules from the task's own analysis, without a model call. You can set it by hand: <tspan class="mono">moa7amed-queue workflow set ID --profile deep</tspan></text>
+
+  <rect class="col" x="40" y="110" width="380" height="410" rx="14"/>
+  <rect x="40" y="110" width="380" height="8" rx="4" fill="#0d9488"/>
+  <text class="h" x="64" y="156">QUICK</text>
+  <text class="e" x="64" y="182">"Update the README", a text change</text>
+  <text class="s" x="64" y="226">• One session, minimal requirements</text>
+  <text class="s" x="64" y="256">• No planning, no agents</text>
+  <text class="s" x="64" y="286">• Root cause first for bug fixes</text>
+  <text class="s" x="64" y="316">• Targeted review</text>
+  <text class="s" x="64" y="346">• Verification report, always</text>
+
+  <rect class="col" x="450" y="110" width="380" height="410" rx="14"/>
+  <rect x="450" y="110" width="380" height="8" rx="4" fill="#2563eb"/>
+  <text class="h" x="474" y="156">STANDARD</text>
+  <text class="e" x="474" y="182">"Add a --tag filter, with tests"</text>
+  <text class="s" x="474" y="226">• Targeted requirements</text>
+  <text class="s" x="474" y="256">• Light planning in the session</text>
+  <text class="s" x="474" y="286">• Test-first when suitable</text>
+  <text class="s" x="474" y="316">• At most two analysis agents,</text>
+  <text class="s" x="489" y="338">only when justified</text>
+  <text class="s" x="474" y="368">• Review by risk</text>
+  <text class="s" x="474" y="398">• Verification report, always</text>
+
+  <rect class="col" x="860" y="110" width="380" height="410" rx="14"/>
+  <rect x="860" y="110" width="380" height="8" rx="4" fill="#7c3aed"/>
+  <text class="h" x="884" y="156">DEEP</text>
+  <text class="e" x="884" y="182">"Fix the SQL injection", architecture</text>
+  <text class="s" x="884" y="226">• Separate planning session</text>
+  <text class="s" x="899" y="248">(no file edits), two or more approaches</text>
+  <text class="s" x="884" y="278">• Read-only analysis agents</text>
+  <text class="s" x="899" y="300">when justified</text>
+  <text class="s" x="884" y="330">• Waits for your approval when</text>
+  <text class="s" x="899" y="352">the change is material</text>
+  <text class="s" x="884" y="382">• Implementation, then review</text>
+  <text class="s" x="899" y="404">when justified</text>
+  <text class="s" x="884" y="434">• Verification report, always</text>
+  <text x="884" y="490" font-size="14" fill="#64748b">DEEP means a thorough process, not the</text>
+  <text x="884" y="508" font-size="14" fill="#64748b">most agents or the most expensive model.</text>
+</svg>

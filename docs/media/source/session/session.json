@@ -1,0 +1,1593 @@
+{
+ "recorded": "2026-11-21",
+ "budget_usd": 0.9,
+ "claude": "2.1.329 (Claude Code)",
+ "project": "notes-app (synthetic)",
+ "steps": [
+  {
+   "scene": "submit",
+   "command": "moa7amed-queue add \"Fix the typo in README.md: 'notebok' should be 'notebook'.\"",
+   "exit": 0,
+   "seconds": 2.37,
+   "killed": false,
+   "lines": [
+    [
+     2.33,
+     "Queued task #1 [normal] Fix the typo in README.md: 'notebok' should be 'notebook'."
+    ],
+    [
+     2.33,
+     "  model: haiku - Small text change (complexity 4/100)"
+    ],
+    [
+     2.33,
+     "  queue: notes-app (1 pending, 0 running, 0 done, 0 failed, 0 cancelled)"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "submit",
+   "command": "moa7amed-queue add \"Add a --tag option to `notes list` that shows only the notes with that tag, with unit tests.\"",
+   "exit": 0,
+   "seconds": 1.11,
+   "killed": false,
+   "lines": [
+    [
+     1.08,
+     "Queued task #2 [normal] Add a --tag option to `notes list` that shows only the notes with tha..."
+    ],
+    [
+     1.08,
+     "  model: sonnet - Standard feature implementation, tests (complexity 18/100)"
+    ],
+    [
+     1.08,
+     "  queue: notes-app (2 pending, 0 running, 0 done, 0 failed, 0 cancelled)"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "submit",
+   "command": "moa7amed-queue add \"Fix the SQL injection in the search function in notes/store.py and add regression tests.\"",
+   "exit": 0,
+   "seconds": 1.14,
+   "killed": false,
+   "lines": [
+    [
+     1.1,
+     "Queued task #3 [normal] Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     1.1,
+     "  model: phased, sonnet - Complex task: authentication, authorization or security design (vulnerability) (complexity 61/100)"
+    ],
+    [
+     1.1,
+     "  queue: notes-app (3 pending, 0 running, 0 done, 0 failed, 0 cancelled)"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "submit",
+   "command": "moa7amed-queue depend 3 --on 2",
+   "exit": 0,
+   "seconds": 0.73,
+   "killed": false,
+   "lines": [
+    [
+     0.7,
+     "Task #3 now runs after: #2"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "routing",
+   "command": "moa7amed-queue model sonnet 3",
+   "exit": 0,
+   "seconds": 0.76,
+   "killed": false,
+   "lines": [
+    [
+     0.72,
+     "Model of #3 set to sonnet (manual override). Other tasks and Claude Code's default model are unchanged."
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "submit",
+   "command": "moa7amed-queue status",
+   "exit": 0,
+   "seconds": 1.23,
+   "killed": false,
+   "lines": [
+    [
+     1.15,
+     "Queue   notes-app  (G:\\mq-demo\\take3\\notes-app)"
+    ],
+    [
+     1.15,
+     "Runner  not running"
+    ],
+    [
+     1.15,
+     "Tasks   3 pending, 0 running, 0 done, 0 failed, 0 cancelled"
+    ],
+    [
+     1.15,
+     "Models  automatic, balanced policy  (* manual, a>b moved, ! blocked)"
+    ],
+    [
+     1.15,
+     "Next    #1, #2"
+    ],
+    [
+     1.15,
+     ""
+    ],
+    [
+     1.15,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.15,
+     "     1  normal   pending   0/2   haiku         Fix the typo in README.md: 'notebok' should be 'noteb..."
+    ],
+    [
+     1.15,
+     "     2  normal   pending   0/2   sonnet        Add a --tag option to `notes list` that shows only th..."
+    ],
+    [
+     1.15,
+     "     3  normal   waiting   0/2   phased*       Fix the SQL injection in the search function in notes...  [after #2]"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "routing",
+   "command": "moa7amed-queue route 1 2 3",
+   "exit": 0,
+   "seconds": 2.99,
+   "killed": false,
+   "lines": [
+    [
+     2.92,
+     "Task #1 - Fix the typo in README.md: 'notebok' should be 'notebook'."
+    ],
+    [
+     2.92,
+     "  Model:       haiku (automatic)"
+    ],
+    [
+     2.92,
+     "  Reason:      Small text change"
+    ],
+    [
+     2.92,
+     "  Complexity:  4/100 (policy balanced, confidence high, classified by rules)"
+    ],
+    [
+     2.92,
+     "  Override:    no"
+    ],
+    [
+     2.92,
+     "  Actual:      not run yet"
+    ],
+    [
+     2.92,
+     "  Escalations: 0"
+    ],
+    [
+     2.92,
+     "  Workflow:    QUICK (small, low-risk change (text, complexity 4/100)); capabilities: review (targeted), verification; agents: not allowed"
+    ],
+    [
+     2.92,
+     "  Status:      pending"
+    ],
+    [
+     2.92,
+     ""
+    ],
+    [
+     2.92,
+     "Task #2 - Add a --tag option to `notes list` that shows only the notes with t..."
+    ],
+    [
+     2.92,
+     "  Model:       sonnet (automatic)"
+    ],
+    [
+     2.92,
+     "  Reason:      Standard feature implementation, tests"
+    ],
+    [
+     2.92,
+     "  Complexity:  18/100 (policy balanced, confidence high, classified by rules)"
+    ],
+    [
+     2.92,
+     "  Override:    no"
+    ],
+    [
+     2.92,
+     "  Actual:      not run yet"
+    ],
+    [
+     2.92,
+     "  Escalations: 0"
+    ],
+    [
+     2.92,
+     "  Workflow:    STANDARD (ordinary development (complexity 18/100)); capabilities: requirements (targeted), brainstorming (when needed), planning (light), tdd (when suitable), review (risk based), verification; agents: only for independent parts"
+    ],
+    [
+     2.92,
+     "  Status:      pending"
+    ],
+    [
+     2.92,
+     ""
+    ],
+    [
+     2.92,
+     "Task #3 - Fix the SQL injection in the search function in notes/store.py and ..."
+    ],
+    [
+     2.92,
+     "  Model:       phased: sonnet in every phase (manual override)"
+    ],
+    [
+     2.92,
+     "  Recommended: opus"
+    ],
+    [
+     2.92,
+     "  Reason:      Complex task: authentication, authorization or security design (vulnerability)"
+    ],
+    [
+     2.92,
+     "  Complexity:  61/100 (policy balanced, confidence high, classified by rules)"
+    ],
+    [
+     2.92,
+     "  Override:    yes, set manually"
+    ],
+    [
+     2.92,
+     "  Actual:      not run yet"
+    ],
+    [
+     2.92,
+     "  Escalations: 0"
+    ],
+    [
+     2.92,
+     "  Workflow:    DEEP (authentication, authorization or security design (vulnerability)); capabilities: requirements, brainstorming, infrastructure, architecture, planning, tdd, debugging, subagents (when beneficial), review, verification; agents: allowed when justified"
+    ],
+    [
+     2.92,
+     "  Status:      waiting"
+    ],
+    [
+     2.92,
+     "  History:"
+    ],
+    [
+     2.92,
+     "    - override sonnet -> sonnet"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "workflow",
+   "command": "moa7amed-queue workflow",
+   "exit": 0,
+   "seconds": 2.81,
+   "killed": false,
+   "lines": [
+    [
+     2.74,
+     "Task #1 - Fix the typo in README.md: 'notebok' should be 'notebook'."
+    ],
+    [
+     2.74,
+     "  Workflow:     QUICK (small, low-risk change (text, complexity 4/100))"
+    ],
+    [
+     2.74,
+     "  Model:        haiku"
+    ],
+    [
+     2.74,
+     "  Capabilities: review (targeted), verification"
+    ],
+    [
+     2.74,
+     "  Agents:       not allowed"
+    ],
+    [
+     2.74,
+     "  Planning:     none"
+    ],
+    [
+     2.74,
+     "  Verification: required"
+    ],
+    [
+     2.74,
+     ""
+    ],
+    [
+     2.74,
+     "Task #2 - Add a --tag option to `notes list` that shows only the notes with t..."
+    ],
+    [
+     2.74,
+     "  Workflow:     STANDARD (ordinary development (complexity 18/100))"
+    ],
+    [
+     2.74,
+     "  Model:        sonnet"
+    ],
+    [
+     2.74,
+     "  Capabilities: requirements (targeted), brainstorming (when needed), planning (light), tdd (when suitable), review (risk based), verification"
+    ],
+    [
+     2.74,
+     "  Agents:       only for independent parts"
+    ],
+    [
+     2.74,
+     "  Planning:     targeted, in the session"
+    ],
+    [
+     2.74,
+     "  Verification: required"
+    ],
+    [
+     2.74,
+     ""
+    ],
+    [
+     2.74,
+     "Task #3 - Fix the SQL injection in the search function in notes/store.py and ..."
+    ],
+    [
+     2.74,
+     "  Workflow:     DEEP (authentication, authorization or security design (vulnerability))"
+    ],
+    [
+     2.74,
+     "  Model:        sonnet in every phase (plan, implement, review when justified)"
+    ],
+    [
+     2.74,
+     "  Capabilities: requirements, brainstorming, infrastructure, architecture, planning, tdd, debugging, subagents (when beneficial), review, verification"
+    ],
+    [
+     2.74,
+     "  Agents:       allowed when justified"
+    ],
+    [
+     2.74,
+     "  Planning:     plan phase; phase now: plan"
+    ],
+    [
+     2.74,
+     "  Verification: required"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "agents",
+   "command": "moa7amed-queue agents evaluate 3",
+   "exit": 0,
+   "seconds": 2.6,
+   "killed": false,
+   "lines": [
+    [
+     2.57,
+     "PARALLEL: 2 read-only subtasks, 2 independent, expected benefit 50%"
+    ],
+    [
+     2.57,
+     "  mechanism: separate Claude Code CLI sessions (claude -p), started concurrently by the queue"
+    ]
+   ],
+   "spent_usd_after": 0
+  },
+  {
+   "scene": "run",
+   "command": "moa7amed-queue run",
+   "exit": 1,
+   "seconds": 120.71,
+   "killed": false,
+   "lines": [
+    [
+     0.74,
+     "[2026-11-21 00:15:36] runner 44d3e545ac2a started for G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     1.39,
+     "[2026-11-21 00:15:37] task #1 started (attempt 1/2) [model: haiku]: Fix the typo in README.md: 'notebok' should be 'notebook'."
+    ],
+    [
+     18.72,
+     "[2026-11-21 00:15:54] task #1 DONE: Fixed the typo in README.md line 3: \"notebok\" → \"notebook\". [commit 533499753e, 1 file(s)] [ran on claude-haiku-5-5]"
+    ],
+    [
+     19.41,
+     "[2026-11-21 00:15:55] task #2 started (attempt 1/2) [model: sonnet]: Add a --tag option to `notes list` that shows only the notes with tha..."
+    ],
+    [
+     51.16,
+     "[2026-11-21 00:16:27] task #2 DONE: added `--tag` filter to `notes list` (store.list_notes tag param + CLI option) with unit tests, all passing [commit 646dc7342f, 3 file(s)] [ran on claude-sonnet-5-5]"
+    ],
+    [
+     89.63,
+     "[2026-11-21 00:17:05] task #3 started (attempt 1/2) [model: sonnet, plan phase, manual]: Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     120.64,
+     "[2026-11-21 00:17:36] task #3 DONE: plan ready [ran on claude-sonnet-5-5] -- plan phase done; next: implement"
+    ],
+    [
+     120.65,
+     "[2026-11-21 00:17:36] nothing more to run: 1 pending task(s) cannot run: #3 wait for your approval of their plan (`moa7amed-queue workflow approve <id>`)"
+    ],
+    [
+     120.66,
+     "[2026-11-21 00:17:36] runner 44d3e545ac2a finished: 3 run(s), 0 task(s) failed, exit code 1"
+    ]
+   ],
+   "spent_usd_after": 0.2901
+  },
+  {
+   "scene": "approval",
+   "command": "moa7amed-queue status",
+   "exit": 0,
+   "seconds": 1.1,
+   "killed": false,
+   "lines": [
+    [
+     1.01,
+     "Queue   notes-app  (G:\\mq-demo\\take3\\notes-app)"
+    ],
+    [
+     1.01,
+     "Runner  not running"
+    ],
+    [
+     1.01,
+     "Tasks   1 pending, 0 running, 2 done, 0 failed, 0 cancelled"
+    ],
+    [
+     1.01,
+     "Models  automatic, balanced policy  (* manual, a>b moved, ! blocked)"
+    ],
+    [
+     1.01,
+     ""
+    ],
+    [
+     1.01,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.01,
+     "     3  normal   blocked   0/2   phased*!      Fix the SQL injection in the search function in notes...  [approval: the plan for this material task waits for your review. Read it with `moa7amed-queue show 3`, then...]"
+    ],
+    [
+     1.01,
+     ""
+    ],
+    [
+     1.01,
+     "Recently done:"
+    ],
+    [
+     1.01,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.01,
+     "     1  normal   done      1/2   haiku         Fix the typo in README.md: 'notebok' should be 'noteb...  [commit 533499753e]"
+    ],
+    [
+     1.01,
+     "     2  normal   done      1/2   sonnet        Add a --tag option to `notes list` that shows only th...  [commit 646dc7342f]"
+    ]
+   ],
+   "spent_usd_after": 0.2901
+  },
+  {
+   "scene": "approval",
+   "command": "moa7amed-queue workflow 3",
+   "exit": 0,
+   "seconds": 1.05,
+   "killed": false,
+   "lines": [
+    [
+     1.01,
+     "Task #3 - Fix the SQL injection in the search function in notes/store.py and ..."
+    ],
+    [
+     1.01,
+     "  Workflow:     DEEP (authentication, authorization or security design (vulnerability))"
+    ],
+    [
+     1.01,
+     "  Model:        sonnet in every phase (plan, implement, review when justified)"
+    ],
+    [
+     1.01,
+     "  Capabilities: requirements, brainstorming, infrastructure, architecture, planning, tdd, debugging, subagents (when beneficial), review, verification"
+    ],
+    [
+     1.01,
+     "  Agents:       allowed when justified"
+    ],
+    [
+     1.01,
+     "  Planning:     plan phase; phase now: implement; approval: waiting"
+    ],
+    [
+     1.01,
+     "  Verification: required"
+    ],
+    [
+     1.01,
+     "  Usage:        $0.0928 over 1 run(s), as reported by Claude Code"
+    ]
+   ],
+   "spent_usd_after": 0.2901
+  },
+  {
+   "scene": "approval",
+   "command": "moa7amed-queue show 3",
+   "exit": 0,
+   "seconds": 0.88,
+   "killed": false,
+   "lines": [
+    [
+     0.83,
+     "Task #3  Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     0.83,
+     "  state      blocked  [approval: the plan for this material task waits for your review. Read it with `moa7amed-queue show 3`, then...]"
+    ],
+    [
+     0.83,
+     "  priority   normal"
+    ],
+    [
+     0.83,
+     "  attempts   0 of 2"
+    ],
+    [
+     0.83,
+     "  added      2026-11-21 00:15:24 (via cli)"
+    ],
+    [
+     0.83,
+     "  runs in    G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     0.83,
+     "  after      #2 (done)"
+    ],
+    [
+     0.83,
+     ""
+    ],
+    [
+     0.83,
+     "Original prompt:"
+    ],
+    [
+     0.83,
+     "    Fix the SQL injection in the search function in notes/store.py and add regression tests."
+    ],
+    [
+     0.83,
+     ""
+    ],
+    [
+     0.83,
+     "Acceptance criteria:"
+    ],
+    [
+     0.83,
+     "    (none recorded)"
+    ],
+    [
+     0.83,
+     ""
+    ],
+    [
+     0.83,
+     "Model routing:"
+    ],
+    [
+     0.83,
+     "      Model:       phased: sonnet in every phase; now in the implement phase (manual override)"
+    ],
+    [
+     0.83,
+     "      Recommended: opus"
+    ],
+    [
+     0.83,
+     "      Reason:      Complex task: authentication, authorization or security design (vulnerability)"
+    ],
+    [
+     0.83,
+     "      Complexity:  61/100 (policy balanced, confidence high, classified by rules)"
+    ],
+    [
+     0.83,
+     "      Override:    yes, set manually"
+    ],
+    [
+     0.83,
+     "      Actual:      claude-sonnet-5-5"
+    ],
+    [
+     0.83,
+     "      Escalations: 0"
+    ],
+    [
+     0.83,
+     "      BLOCKED:     approval: the plan for this material task waits for your review. Read it with `moa7amed-queue show 3`, then `moa7amed-queue workflow approve 3` (or cancel it)"
+    ],
+    [
+     0.83,
+     "      Usage:       $0.0928 over 1 run(s), as reported by the CLI"
+    ],
+    [
+     0.83,
+     "      Workflow:    DEEP (authentication, authorization or security design (vulnerability)); capabilities: requirements, brainstorming, infrastructure, architecture, planning, tdd, debugging, subagents (when beneficial), review, verification; agents: allowed when justified"
+    ],
+    [
+     0.83,
+     "      Agents:      2 read-only agent(s): 2 reported; ran 2 at most at once; reported $0.1026"
+    ],
+    [
+     0.83,
+     "      Status:      blocked"
+    ],
+    [
+     0.83,
+     "      History:"
+    ],
+    [
+     0.83,
+     "        - override sonnet -> sonnet"
+    ],
+    [
+     0.83,
+     "        - run 3 (plan): asked for sonnet, ran on claude-sonnet-5-5 (confirmed) -> done, $0.0928"
+    ],
+    [
+     0.83,
+     "        - blocked: approval: the plan for this material task waits for your review. Read it with `moa7amed-queue show 3`, then `moa7amed-queue workflow approve 3` (or cancel it)"
+    ],
+    [
+     0.83,
+     ""
+    ],
+    [
+     0.83,
+     "Runs:"
+    ],
+    [
+     0.83,
+     "  run 3, attempt 1: done  (2026-11-21 00:17:05 -> 2026-11-21 00:17:36)"
+    ],
+    [
+     0.83,
+     "      model:   asked for sonnet (plan phase), ran on claude-sonnet-5-5 (confirmed)"
+    ],
+    [
+     0.83,
+     "      cost:    $0.0928"
+    ],
+    [
+     0.83,
+     "      session: (session id removed)  (inspect with: claude --resume (session id removed))"
+    ],
+    [
+     0.83,
+     "      output:  G:\\mq-demo\\take3\\queue-home\\projects\\notes-app-5d4538a1ba\\runs\\task-0003\\run-000003.stdout.json"
+    ]
+   ],
+   "spent_usd_after": 0.2901
+  },
+  {
+   "scene": "approval",
+   "command": "moa7amed-queue workflow approve 3",
+   "exit": 0,
+   "seconds": 1.11,
+   "killed": false,
+   "lines": [
+    [
+     1.08,
+     "Approved the plan of #3; implementation follows on the next run."
+    ]
+   ],
+   "spent_usd_after": 0.2901
+  },
+  {
+   "scene": "run",
+   "command": "moa7amed-queue run",
+   "exit": 0,
+   "seconds": 64.35,
+   "killed": false,
+   "lines": [
+    [
+     0.76,
+     "[2026-11-21 00:17:41] runner 831efb23fe68 started for G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     1.35,
+     "[2026-11-21 00:17:42] task #3 started (attempt 1/2) [model: sonnet, implement phase, manual]: Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     39.34,
+     "[2026-11-21 00:18:20] task #3 DONE: Fixed the SQL injection in store.search with a bound LIKE parameter and added 8 regression tests (6 failed on the old code, now all 12 tests pass). [commit 582a9a3db9, 2 file(s)] [ran on claude-sonnet-5-5] -- implement phase done; next: review"
+    ],
+    [
+     39.92,
+     "[2026-11-21 00:18:20] task #3 started (attempt 1/2) [model: sonnet, review phase, manual]: Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     64.28,
+     "[2026-11-21 00:18:45] task #3 DONE: search is parameterised (LIKE ? with bound \"%term%\"), 8 regression tests added, full suite of 12 passes, and only store.py and tests/test_store.py changed. [ran on claude-sonnet-5-5]"
+    ],
+    [
+     64.28,
+     "[2026-11-21 00:18:45] nothing more to run: the queue has no pending tasks"
+    ],
+    [
+     64.29,
+     "[2026-11-21 00:18:45] runner 831efb23fe68 finished: 2 run(s), 0 task(s) failed, exit code 0"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "agents",
+   "command": "moa7amed-queue agents show 3",
+   "exit": 0,
+   "seconds": 1.1,
+   "killed": false,
+   "lines": [
+    [
+     1.06,
+     "Task #3: PARALLEL"
+    ],
+    [
+     1.06,
+     "  Reason:     2 read-only subtasks, 2 independent, expected benefit 50%"
+    ],
+    [
+     1.06,
+     "  Mechanism:  separate Claude Code CLI sessions (claude -p), started concurrently by the queue"
+    ],
+    [
+     1.06,
+     "  Plan:       built-in: analysis roles (analysis rounds used: 1)"
+    ],
+    [
+     1.06,
+     "  Measured:   2 agent(s) at most at the same time; wall 35.6s, agent time 61.1s (x1.72)"
+    ],
+    [
+     1.06,
+     "  Usage:      $0.1026 reported by Claude Code for the agents"
+    ],
+    [
+     1.06,
+     "  - security-review      security_review        reported  pid 29088   00:16:29.142 -> 00:16:55.509  sonnet (parent's manual choice)"
+    ],
+    [
+     1.06,
+     "      isolation: snapshot of HEAD (646dc7342f) plus tool restrictions"
+    ],
+    [
+     1.06,
+     "      revision:  6dba2fd2f038@646dc7342f (attempt 1)"
+    ],
+    [
+     1.06,
+     "      cost:      $0.0450 reported"
+    ],
+    [
+     1.06,
+     "      integration: findings kept for the coordinator"
+    ],
+    [
+     1.06,
+     "  - test-gap-analysis    test_gap_analysis      reported  pid 5528    00:16:30.027 -> 00:17:04.780  sonnet (parent's manual choice)"
+    ],
+    [
+     1.06,
+     "      isolation: snapshot of HEAD (646dc7342f) plus tool restrictions"
+    ],
+    [
+     1.06,
+     "      revision:  6dba2fd2f038@646dc7342f (attempt 1)"
+    ],
+    [
+     1.06,
+     "      cost:      $0.0577 reported"
+    ],
+    [
+     1.06,
+     "      integration: findings kept for the coordinator"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "verify",
+   "command": "moa7amed-queue show 3",
+   "exit": 0,
+   "seconds": 1.25,
+   "killed": false,
+   "lines": [
+    [
+     1.17,
+     "Task #3  Fix the SQL injection in the search function in notes/store.py and ad..."
+    ],
+    [
+     1.17,
+     "  state      done  [commit 582a9a3db9]"
+    ],
+    [
+     1.17,
+     "  priority   normal"
+    ],
+    [
+     1.17,
+     "  attempts   1 of 2"
+    ],
+    [
+     1.17,
+     "  added      2026-11-21 00:15:24 (via cli)"
+    ],
+    [
+     1.17,
+     "  runs in    G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     1.17,
+     "  after      #2 (done)"
+    ],
+    [
+     1.17,
+     "  result     search is parameterised (LIKE ? with bound \"%term%\"), 8 regression tests added, full suite of 12 passes, and only store.py and tests/test_store.py changed."
+    ],
+    [
+     1.17,
+     "  commit     582a9a3db9f93e45492d6bc145dd2d24b109c954"
+    ],
+    [
+     1.17,
+     ""
+    ],
+    [
+     1.17,
+     "Original prompt:"
+    ],
+    [
+     1.17,
+     "    Fix the SQL injection in the search function in notes/store.py and add regression tests."
+    ],
+    [
+     1.17,
+     ""
+    ],
+    [
+     1.17,
+     "Acceptance criteria:"
+    ],
+    [
+     1.17,
+     "    (none recorded)"
+    ],
+    [
+     1.17,
+     ""
+    ],
+    [
+     1.17,
+     "Model routing:"
+    ],
+    [
+     1.17,
+     "      Model:       phased: sonnet in every phase (manual override)"
+    ],
+    [
+     1.17,
+     "      Recommended: opus"
+    ],
+    [
+     1.17,
+     "      Reason:      Complex task: authentication, authorization or security design (vulnerability)"
+    ],
+    [
+     1.17,
+     "      Complexity:  61/100 (policy balanced, confidence high, classified by rules)"
+    ],
+    [
+     1.17,
+     "      Override:    yes, set manually"
+    ],
+    [
+     1.17,
+     "      Actual:      claude-sonnet-5-5"
+    ],
+    [
+     1.17,
+     "      Escalations: 0"
+    ],
+    [
+     1.17,
+     "      Usage:       $0.3407 over 3 run(s), as reported by the CLI"
+    ],
+    [
+     1.17,
+     "      Workflow:    DEEP (authentication, authorization or security design (vulnerability)); capabilities: requirements, brainstorming, infrastructure, architecture, planning, tdd, debugging, subagents (when beneficial), review, verification; agents: allowed when justified"
+    ],
+    [
+     1.17,
+     "      Agents:      2 read-only agent(s): 2 reported; ran 2 at most at once; reported $0.1026"
+    ],
+    [
+     1.17,
+     "      Status:      done"
+    ],
+    [
+     1.17,
+     "      History:"
+    ],
+    [
+     1.17,
+     "        - override sonnet -> sonnet"
+    ],
+    [
+     1.17,
+     "        - run 3 (plan): asked for sonnet, ran on claude-sonnet-5-5 (confirmed) -> done, $0.0928"
+    ],
+    [
+     1.17,
+     "        - blocked: approval: the plan for this material task waits for your review. Read it with `moa7amed-queue show 3`, then `moa7amed-queue workflow approve 3` (or cancel it)"
+    ],
+    [
+     1.17,
+     "        - run 4 (implement): asked for sonnet, ran on claude-sonnet-5-5 (confirmed) -> done, $0.1532"
+    ],
+    [
+     1.17,
+     "        - run 5 (review): asked for sonnet, ran on claude-sonnet-5-5 (confirmed) -> done, $0.0947"
+    ],
+    [
+     1.17,
+     ""
+    ],
+    [
+     1.17,
+     "Runs:"
+    ],
+    [
+     1.17,
+     "  run 3, attempt 1: done  (2026-11-21 00:17:05 -> 2026-11-21 00:17:36)"
+    ],
+    [
+     1.17,
+     "      model:   asked for sonnet (plan phase), ran on claude-sonnet-5-5 (confirmed)"
+    ],
+    [
+     1.17,
+     "      cost:    $0.0928"
+    ],
+    [
+     1.17,
+     "      session: (session id removed)  (inspect with: claude --resume (session id removed))"
+    ],
+    [
+     1.17,
+     "      output:  G:\\mq-demo\\take3\\queue-home\\projects\\notes-app-5d4538a1ba\\runs\\task-0003\\run-000003.stdout.json"
+    ],
+    [
+     1.17,
+     "  run 4, attempt 1: done  (2026-11-21 00:17:42 -> 2026-11-21 00:18:20)"
+    ],
+    [
+     1.17,
+     "      model:   asked for sonnet (implement phase), ran on claude-sonnet-5-5 (confirmed)"
+    ],
+    [
+     1.17,
+     "      commit:  582a9a3db9f93e45492d6bc145dd2d24b109c954"
+    ],
+    [
+     1.17,
+     "      changed: notes/store.py, tests/test_store.py"
+    ],
+    [
+     1.17,
+     "      cost:    $0.1532"
+    ],
+    [
+     1.17,
+     "      session: (session id removed)  (inspect with: claude --resume (session id removed))"
+    ],
+    [
+     1.17,
+     "      output:  G:\\mq-demo\\take3\\queue-home\\projects\\notes-app-5d4538a1ba\\runs\\task-0003\\run-000004.stdout.json"
+    ],
+    [
+     1.17,
+     "  run 5, attempt 1: done  (2026-11-21 00:18:20 -> 2026-11-21 00:18:45)"
+    ],
+    [
+     1.17,
+     "      model:   asked for sonnet (review phase), ran on claude-sonnet-5-5 (confirmed)"
+    ],
+    [
+     1.17,
+     "      cost:    $0.0947"
+    ],
+    [
+     1.17,
+     "      session: (session id removed)  (inspect with: claude --resume (session id removed))"
+    ],
+    [
+     1.17,
+     "      output:  G:\\mq-demo\\take3\\queue-home\\projects\\notes-app-5d4538a1ba\\runs\\task-0003\\run-000005.stdout.json"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "verify",
+   "command": "moa7amed-queue status",
+   "exit": 0,
+   "seconds": 1.56,
+   "killed": false,
+   "lines": [
+    [
+     1.5,
+     "Queue   notes-app  (G:\\mq-demo\\take3\\notes-app)"
+    ],
+    [
+     1.5,
+     "Runner  not running"
+    ],
+    [
+     1.5,
+     "Tasks   0 pending, 0 running, 3 done, 0 failed, 0 cancelled"
+    ],
+    [
+     1.5,
+     "Models  automatic, balanced policy  (* manual, a>b moved, ! blocked)"
+    ],
+    [
+     1.5,
+     ""
+    ],
+    [
+     1.5,
+     "  (no tasks)"
+    ],
+    [
+     1.5,
+     ""
+    ],
+    [
+     1.5,
+     "Recently done:"
+    ],
+    [
+     1.5,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.5,
+     "     1  normal   done      1/2   haiku         Fix the typo in README.md: 'notebok' should be 'noteb...  [commit 533499753e]"
+    ],
+    [
+     1.5,
+     "     2  normal   done      1/2   sonnet        Add a --tag option to `notes list` that shows only th...  [commit 646dc7342f]"
+    ],
+    [
+     1.5,
+     "     3  normal   done      1/2   phased*       Fix the SQL injection in the search function in notes...  [commit 582a9a3db9]"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "verify",
+   "command": "moa7amed-queue usage",
+   "exit": 0,
+   "seconds": 1.16,
+   "killed": false,
+   "lines": [
+    [
+     1.12,
+     "Cost of G:\\mq-demo\\take3\\notes-app, as reported by Claude Code"
+    ],
+    [
+     1.12,
+     "  runs: 5 (5 with a reported cost, 0 without)"
+    ],
+    [
+     1.12,
+     "  tasks: $0.4353    model reviews of routing decisions: $0.0000"
+    ],
+    [
+     1.12,
+     "  workers of multi-agent tasks: $0.1026 over 2 session(s)"
+    ],
+    [
+     1.12,
+     ""
+    ],
+    [
+     1.12,
+     "  model                               runs       cost    input tok   output tok"
+    ],
+    [
+     1.12,
+     "  claude-sonnet-5-5                      4    $0.4314       985353        10230"
+    ],
+    [
+     1.12,
+     "  claude-haiku-5-5                       1    $0.0040       196326          780"
+    ],
+    [
+     1.12,
+     ""
+    ],
+    [
+     1.12,
+     "  most expensive tasks"
+    ],
+    [
+     1.12,
+     "  #3      $0.3407  3 run(s)  Fix the SQL injection in the search function in notes/sto..."
+    ],
+    [
+     1.12,
+     "  #2      $0.0907  1 run(s)  Add a --tag option to `notes list` that shows only the no..."
+    ],
+    [
+     1.12,
+     "  #1      $0.0040  1 run(s)  Fix the typo in README.md: 'notebok' should be 'notebook'."
+    ],
+    [
+     1.12,
+     ""
+    ],
+    [
+     1.12,
+     "  limits: max_budget_usd = 0.5, cost_limit_run_usd = 0.9"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "verify",
+   "command": "git log --oneline",
+   "exit": 0,
+   "seconds": 0.09,
+   "killed": false,
+   "lines": [
+    [
+     0.08,
+     "582a9a3 Fix the SQL injection in the search function in notes/store.py and ad... (task #3)"
+    ],
+    [
+     0.08,
+     "646dc73 Add a --tag option to `notes list` that shows only the notes with tha... (task #2)"
+    ],
+    [
+     0.08,
+     "5334997 Fix the typo in README.md: 'notebok' should be 'notebook'. (task #1)"
+    ],
+    [
+     0.08,
+     "8fadd87 notes-app: first version"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "verify",
+   "command": "python -m unittest",
+   "exit": 0,
+   "seconds": 0.82,
+   "killed": false,
+   "lines": [
+    [
+     0.78,
+     "............"
+    ],
+    [
+     0.78,
+     "----------------------------------------------------------------------"
+    ],
+    [
+     0.78,
+     "Ran 12 tests in 0.029s"
+    ],
+    [
+     0.78,
+     ""
+    ],
+    [
+     0.78,
+     "OK"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "recovery",
+   "command": "moa7amed-queue add \"Add a short docstring to every function in notes/cli.py.\"",
+   "exit": 0,
+   "seconds": 1.3,
+   "killed": false,
+   "lines": [
+    [
+     1.25,
+     "Queued task #4 [normal] Add a short docstring to every function in notes/cli.py."
+    ],
+    [
+     1.25,
+     "  model: haiku - Simple documentation change (complexity 9/100)"
+    ],
+    [
+     1.25,
+     "  queue: notes-app (1 pending, 0 running, 3 done, 0 failed, 0 cancelled)"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "recovery",
+   "command": "moa7amed-queue run",
+   "exit": 1,
+   "seconds": 6.08,
+   "killed": true,
+   "lines": [
+    [
+     1.27,
+     "[2026-11-21 00:18:53] runner 69c5d9854504 started for G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     1.92,
+     "[2026-11-21 00:18:54] task #4 started (attempt 1/2) [model: haiku]: Add a short docstring to every function in notes/cli.py."
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "recovery",
+   "command": "moa7amed-queue status",
+   "exit": 0,
+   "seconds": 1.15,
+   "killed": false,
+   "lines": [
+    [
+     1.1,
+     "Queue   notes-app  (G:\\mq-demo\\take3\\notes-app)"
+    ],
+    [
+     1.1,
+     "Runner  STALE lock left by a runner that is gone (pid 3456 on demo-pc); the next run recovers it automatically, or use `moa7amed-queue recover`"
+    ],
+    [
+     1.1,
+     "Tasks   0 pending, 1 running, 3 done, 0 failed, 0 cancelled"
+    ],
+    [
+     1.1,
+     "Models  automatic, balanced policy  (* manual, a>b moved, ! blocked)"
+    ],
+    [
+     1.1,
+     ""
+    ],
+    [
+     1.1,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.1,
+     "     4  normal   running   1/2   haiku         Add a short docstring to every function in notes/cli.py."
+    ],
+    [
+     1.1,
+     ""
+    ],
+    [
+     1.1,
+     "Recently done:"
+    ],
+    [
+     1.1,
+     "    ID  PRIORITY STATE     TRIES MODEL         TITLE"
+    ],
+    [
+     1.1,
+     "     1  normal   done      1/2   haiku         Fix the typo in README.md: 'notebok' should be 'noteb...  [commit 533499753e]"
+    ],
+    [
+     1.1,
+     "     2  normal   done      1/2   sonnet        Add a --tag option to `notes list` that shows only th...  [commit 646dc7342f]"
+    ],
+    [
+     1.1,
+     "     3  normal   done      1/2   phased*       Fix the SQL injection in the search function in notes...  [commit 582a9a3db9]"
+    ]
+   ],
+   "spent_usd_after": 0.538
+  },
+  {
+   "scene": "recovery",
+   "command": "moa7amed-queue run",
+   "exit": 0,
+   "seconds": 29.61,
+   "killed": false,
+   "lines": [
+    [
+     0.93,
+     "[2026-11-21 00:19:00] runner 0e2e155d9763 started for G:\\mq-demo\\take3\\notes-app"
+    ],
+    [
+     0.93,
+     "[2026-11-21 00:19:00] recovered interrupted task #4 -> pending"
+    ],
+    [
+     1.7,
+     "[2026-11-21 00:19:01] task #4 started (attempt 2/2) [model: haiku]: Add a short docstring to every function in notes/cli.py."
+    ],
+    [
+     29.55,
+     "[2026-11-21 00:19:29] task #4 DONE: Added a one-line docstring to `main` in `notes/cli.py`, the only function in that file; tests were not run because command execution needed approval. [commit 13272496c5, 1 file(s)] [ran on claude-haiku-5-5]"
+    ],
+    [
+     29.55,
+     "[2026-11-21 00:19:29] nothing more to run: the queue has no pending tasks"
+    ],
+    [
+     29.56,
+     "[2026-11-21 00:19:29] runner 0e2e155d9763 finished: 1 run(s), 0 task(s) failed, exit code 0"
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "recovery",
+   "command": "moa7amed-queue history 4",
+   "exit": 0,
+   "seconds": 1.13,
+   "killed": false,
+   "lines": [
+    [
+     1.09,
+     "2026-11-21 00:18:52  #4    added           priority=normal source=cli"
+    ],
+    [
+     1.09,
+     "2026-11-21 00:18:54  #4    started         attempt 1/2 in G:\\mq-demo\\take3\\notes-app; model haiku (auto)"
+    ],
+    [
+     1.09,
+     "2026-11-21 00:19:00  #4    interrupted     the runner stopped before the task finished; task is pending again"
+    ],
+    [
+     1.09,
+     "2026-11-21 00:19:01  #4    started         attempt 2/2 in G:\\mq-demo\\take3\\notes-app; model haiku (auto)"
+    ],
+    [
+     1.09,
+     "2026-11-21 00:19:29  #4    done            Added a one-line docstring to `main` in `notes/cli.py`, the only function in that file; tests were not run because command execution needed approva..."
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "bid",
+   "command": "moa7amed-queue bid new b1 --request \"Prepare the technical proposal for the visitor management system tender.\" --mode technical",
+   "exit": 0,
+   "seconds": 1.43,
+   "killed": false,
+   "lines": [
+    [
+     1.39,
+     "Created bid project b1 (technical mode, no company profile yet). Next: add the tender documents (`moa7amed-queue bid doc b1 <file>`)."
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "bid",
+   "command": "moa7amed-queue bid doc b1 ../inputs/rfp-visitor-management.docx --type rfp",
+   "exit": 0,
+   "seconds": 1.1,
+   "killed": false,
+   "lines": [
+    [
+     1.06,
+     "Recorded D1: rfp-visitor-management.docx, read, - page(s), read with docx (built-in reader)"
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "bid",
+   "command": "moa7amed-queue bid status b1",
+   "exit": 0,
+   "seconds": 1.1,
+   "killed": false,
+   "lines": [
+    [
+     1.06,
+     "Bid b1 - Bid b1"
+    ],
+    [
+     1.06,
+     "  Request:      Prepare the technical proposal for the visitor management system tender."
+    ],
+    [
+     1.06,
+     "  Mode:         technical, company -, revision 1"
+    ],
+    [
+     1.06,
+     "  Tender:       -; client -; deadline -"
+    ],
+    [
+     1.06,
+     "  Documents:    D1 read"
+    ],
+    [
+     1.06,
+     "  Requirements: 0 (0 mandatory); compliance: -"
+    ],
+    [
+     1.06,
+     "  Disqualifying: none"
+    ],
+    [
+     1.06,
+     "  Clarifications: 0 open of 0"
+    ],
+    [
+     1.06,
+     "  Recommendation: INSUFFICIENT_INFORMATION"
+    ],
+    [
+     1.06,
+     "  Pricing:      not started; selling USD 0.00; total bid price 0.00"
+    ],
+    [
+     1.06,
+     "  Approvals:    architecture not approved, compliance_commitments not approved, licensing not approved, pricing not approved, contract_exceptions not approved, release not approved"
+    ],
+    [
+     1.06,
+     "  Findings:     0 BLOCKER, 0 HIGH, 0 MEDIUM, 0 LOW"
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "replica",
+   "command": "moa7amed-queue replica new r1 --request \"Rebuild our order tracking prototype from its HTML pages.\" --ownership own",
+   "exit": 0,
+   "seconds": 1.03,
+   "killed": false,
+   "lines": [
+    [
+     0.99,
+     "Created replica project r1: visual mode, prototype, ownership own."
+    ],
+    [
+     0.99,
+     "Next: add references (`moa7amed-queue replica ref r1 <url|file|folder>`), capture them, then the inventory."
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "replica",
+   "command": "moa7amed-queue replica ref r1 ../inputs/order-tracking --kind source --provenance \"our own prototype\" --permission \"own assets\"",
+   "exit": 0,
+   "seconds": 1.26,
+   "killed": false,
+   "lines": [
+    [
+     1.19,
+     "Recorded E1 source (available)"
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  },
+  {
+   "scene": "replica",
+   "command": "moa7amed-queue replica status r1",
+   "exit": 0,
+   "seconds": 1.11,
+   "killed": false,
+   "lines": [
+    [
+     1.07,
+     "Replica r1 - Replica r1"
+    ],
+    [
+     1.07,
+     "  Request:    Rebuild our order tracking prototype from its HTML pages."
+    ],
+    [
+     1.07,
+     "  Mode:       visual, quality prototype, ownership own"
+    ],
+    [
+     1.07,
+     "  Stage:      reconnaissance (plan: analysis)"
+    ],
+    [
+     1.07,
+     "  Evidence:   1 references; 0 screens, 0 features, 0 flows, 0 unknown"
+    ],
+    [
+     1.07,
+     "  Queue:      nothing queued yet"
+    ],
+    [
+     1.07,
+     "  Features:   -"
+    ],
+    [
+     1.07,
+     "  Cost:       $0.0000 reported for its tasks"
+    ]
+   ],
+   "spent_usd_after": 0.5451
+  }
+ ],
+ "spent_usd": 0.5451,
+ "git_log": [
+  "1327249 Add a short docstring to every function in notes/cli.py. (task #4)",
+  "582a9a3 Fix the SQL injection in the search function in notes/store.py and ad... (task #3)",
+  "646dc73 Add a --tag option to `notes list` that shows only the notes with tha... (task #2)",
+  "5334997 Fix the typo in README.md: 'notebok' should be 'notebook'. (task #1)",
+  "8fadd87 notes-app: first version"
+ ],
+ "tests_after": {
+  "exit": 0,
+  "tail": [
+   "Ran 12 tests in 0.018s",
+   "",
+   "OK"
+  ]
+ },
+ "redactions": "8 Claude Code session id(s) replaced by '(session id removed)'"
+}

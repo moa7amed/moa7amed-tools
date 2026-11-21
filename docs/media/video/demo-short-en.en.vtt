@@ -1,0 +1,26 @@
+WEBVTT
+Language: en
+
+1
+00:00:00.000 --> 00:00:04.000
+moa7amed-queue: a persistent task queue for Claude Code.
+
+2
+00:00:04.000 --> 00:00:08.700
+Three tasks queued. Each one is routed to a model and a workflow.
+
+3
+00:00:08.700 --> 00:00:18.100
+The runner executes them one at a time, each in a fresh Claude Code session.
+
+4
+00:00:18.100 --> 00:00:22.900
+For the security fix, two read-only analysis agents ran at the same time.
+
+5
+00:00:22.900 --> 00:00:30.100
+One commit per task. The project's tests pass.
+
+6
+00:00:30.100 --> 00:00:36.100
+Free and open source (MIT). moa7amed.com

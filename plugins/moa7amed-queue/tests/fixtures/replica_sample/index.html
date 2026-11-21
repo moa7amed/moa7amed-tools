@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcel Desk - Shipments</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">Parcel Desk</span>
+    <nav><a href="index.html" class="active">Shipments</a><a href="details.html?id=SH-1002">Last opened</a></nav>
+  </header>
+  <main class="page">
+    <h1>Shipments</h1>
+    <form id="filter" class="filters">
+      <label>Status
+        <select id="status">
+          <option value="">All</option>
+          <option value="in-transit">In transit</option>
+          <option value="delivered">Delivered</option>
+          <option value="delayed">Delayed</option>
+        </select>
+      </label>
+      <label>Search <input id="query" type="search" placeholder="Reference or city"></label>
+      <button type="submit" class="primary">Apply</button>
+    </form>
+    <table class="grid">
+      <thead><tr><th>Reference</th><th>From</th><th>To</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p id="empty" class="empty" hidden>No shipments match the filter.</p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

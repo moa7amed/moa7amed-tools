@@ -1,0 +1,16 @@
+{
+  "description": "moa7amed-queue: a prompt that starts with \"queue:\" is saved as a persistent task instead of being sent to Claude.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/capture-prompt.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

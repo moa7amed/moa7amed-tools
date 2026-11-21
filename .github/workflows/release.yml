@@ -1,0 +1,124 @@
+name: Release
+
+# Runs only when a maintainer pushes a release tag, or starts it by hand for an existing
+# tag. `claude plugin tag plugins/<name> --push` creates the tag `<name>--v<version>`.
+# Ordinary commits and merges never start this workflow.
+#
+# What it does: repeats every release check and the test suites on the tagged commit,
+# then records the release on GitHub with the changelog entry as its notes.
+# What it does not do: it does not deliver the update. Claude Code delivers a plugin
+# update when the version in plugin.json changes on the branch the marketplace tracks,
+# so a release is decided by the commit that changes the version (docs/versioning.md).
+on:
+  push:
+    tags:
+      - "moa7amed-*--v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag, for example moa7amed-queue--v0.3.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  CLAUDE_CODE_VERSION: "2.1.329"
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  verify:
+    name: Verify the tagged commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      plugin: ${{ steps.tag.outputs.plugin }}
+      version: ${{ steps.tag.outputs.version }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+    steps:
+      - name: Read the tag
+        id: tag
+        shell: bash
+        run: |
+          pattern='^(moa7amed-[a-z0-9-]+)--v([0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?)$'
+          if [[ ! "${RELEASE_TAG}" =~ ${pattern} ]]; then
+            echo "::error::${RELEASE_TAG} is not a release tag of the form <plugin>--v<version>"
+            exit 1
+          fi
+          echo "plugin=${BASH_REMATCH[1]}" >> "${GITHUB_OUTPUT}"
+          echo "version=${BASH_REMATCH[2]}" >> "${GITHUB_OUTPUT}"
+          if [[ -n "${BASH_REMATCH[3]}" ]]; then
+            echo "prerelease=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "prerelease=false" >> "${GITHUB_OUTPUT}"
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        run: npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+      - name: The tag names the version that is in the plugin
+        env:
+          PLUGIN: ${{ steps.tag.outputs.plugin }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: python -B scripts/release_notes.py "${PLUGIN}" "${VERSION}" --expect-current > release-notes.md
+      - name: Release checks and test suites
+        env:
+          PLUGIN: ${{ steps.tag.outputs.plugin }}
+        run: python -B scripts/release_check.py --plugin "${PLUGIN}" --require-cli --tests
+      - name: Build the plugin archive
+        env:
+          PLUGIN: ${{ steps.tag.outputs.plugin }}
+        run: python -B scripts/package.py "${PLUGIN}" --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-archive
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Record the release on GitHub
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # to create the release entry; nothing is pushed to the repository
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-archive
+          path: dist
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PLUGIN: ${{ needs.verify.outputs.plugin }}
+          VERSION: ${{ needs.verify.outputs.version }}
+          PRERELEASE: ${{ needs.verify.outputs.prerelease }}
+        shell: bash
+        run: |
+          flags=(--verify-tag --title "${PLUGIN} ${VERSION}" --notes-file release-notes.md)
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "${RELEASE_TAG}" "${flags[@]}" dist/*

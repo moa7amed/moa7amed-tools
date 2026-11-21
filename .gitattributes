@@ -1,0 +1,35 @@
+# Shell scripts and Python must keep Unix line endings on every platform:
+# the capture hook and the launchers run under sh, also on Windows (Git Bash).
+* text=auto
+*.sh   text eol=lf
+*.py   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+plugins/*/bin/* text eol=lf
+
+# Batch files need Windows line endings.
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# Windows PowerShell 5.1 reads scripts without a BOM in the system code page: keep it ASCII.
+*.ps1  text eol=crlf
+
+# Workflow files are read on Linux runners.
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Documents and images are binary: never convert their line endings.
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.webm binary
+*.zip binary
+
+# Diagrams and captions are text.
+*.svg  text eol=lf
+*.vtt  text eol=lf

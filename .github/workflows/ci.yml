@@ -1,0 +1,84 @@
+name: CI
+
+# Checks every push and pull request. This workflow never publishes, tags or releases
+# anything; its token can only read the repository.
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The Claude Code version this repository was last verified with
+  # (plugins/*/release.json: tested_claude_code). Raise it deliberately.
+  CLAUDE_CODE_VERSION: "2.1.329"
+
+jobs:
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.8 is the oldest version the plugin supports. GitHub's Python builds for it
+        # exist for ubuntu-22.04 and Windows; macOS runners (arm64) start at 3.10.
+        include:
+          - { os: ubuntu-22.04, python: "3.8" }
+          - { os: ubuntu-latest, python: "3.10" }
+          - { os: ubuntu-latest, python: "3.12" }
+          - { os: ubuntu-latest, python: "3.13" }
+          - { os: windows-latest, python: "3.8" }
+          - { os: windows-latest, python: "3.13" }
+          - { os: macos-latest, python: "3.10" }
+          - { os: macos-latest, python: "3.13" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Marketplace tests
+        run: python -B -m unittest discover -s tests -t tests
+      - name: Plugin tests
+        shell: bash
+        run: |
+          for plugin in plugins/*/; do
+            echo "::group::${plugin}"
+            (cd "${plugin}" && python -B -m unittest discover -s tests -t tests)
+            echo "::endgroup::"
+          done
+
+  release-checks:
+    name: Release checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the upgrade tests check out earlier versions
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        # Used offline only: manifest validation and an install into an empty profile.
+        # No API key is configured and none is needed.
+        run: npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+      - name: Versions, changelog, package, secrets, development material, validation, archive, install, update, upgrades
+        run: python -B scripts/release_check.py --require-cli
+      - name: Build the release archive (not published)
+        run: python -B scripts/package.py moa7amed-queue --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-archive
+          path: dist/
+          retention-days: 14

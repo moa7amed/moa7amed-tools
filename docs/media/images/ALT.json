@@ -1,0 +1,14 @@
+{
+ "banner": "moa7amed-queue by moa7amed: Queue. Route. Execute. Verify. A persistent task queue for Claude Code.",
+ "lifecycle": "Diagram of how a queued task is executed: queue, route, claim, optional read-only analysis, execute, verify, commit; deep material plans wait for approval; a crash is recovered by the next runner.",
+ "workflows": "Diagram comparing the QUICK, STANDARD and DEEP workflows.",
+ "multi-agent": "Diagram of stage A multi-agent analysis: concurrent read-only agents on a snapshot, integration by the queue, and the coordinator as the only writer.",
+ "queue-and-run": "Terminal: three tasks are added and routed, task 3 is made to wait for task 2, the status table lists them, and the runner executes them one after another.",
+ "routing": "Terminal: task 3 is set to Sonnet by hand; the route report shows the automatic choice for tasks 1 and 2, and for task 3 the recommended Opus, the manual Sonnet and the DEEP workflow.",
+ "workflow": "Terminal: the workflow report shows each task's profile, capabilities, planning and required verification.",
+ "agents": "Terminal: the agent evaluation chooses two read-only agents for task 3; agents show lists their process ids, overlapping start and end times, snapshot isolation, input revision and reported cost.",
+ "approval": "Terminal: task 3's plan waits for approval, the owner approves it, and the next run implements it.",
+ "verification": "Terminal: task 3's record with its result, model and agents; the git log with one commit per task; the project's tests passing; the usage report.",
+ "recovery": "Terminal: a runner is killed while a task runs; status reports the stale lock; the next run recovers the interrupted task and finishes it; the history shows both attempts.",
+ "bid-and-replica": "Terminal: a BidStudio project is created and a synthetic tender document recorded; a Replica project is created from the team's own HTML prototype; both report their status."
+}

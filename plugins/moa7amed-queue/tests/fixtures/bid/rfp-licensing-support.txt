@@ -1,0 +1,7 @@
+RFQ-LS-2026-03: Database licences and five-year support (fictitious)
+
+1. Supply 8 processor licences of an enterprise relational database.
+2. Provide five years of vendor support and updates, priced per year.
+3. Provide 24x7 support with a 2-hour response for severity 1 incidents.
+4. Prices in EUR. Payment annually in advance.
+5. The bidder must be an authorised reseller of the database vendor.

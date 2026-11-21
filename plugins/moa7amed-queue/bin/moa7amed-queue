@@ -1,0 +1,54 @@
+#!/bin/sh
+# moa7amed-queue command line launcher (POSIX shells, Git Bash on Windows).
+# Finds a Python 3.8+ interpreter and runs scripts/mq.py with the given arguments.
+# Set MOA7AMED_QUEUE_PYTHON to force a specific interpreter.
+#
+# Starting a process is slow on Windows, so the interpreter that passed the
+# version check is remembered in <data directory>/python-path and reused.
+#
+# Names from before the rebrand are still honoured: CTQ_PYTHON, CTQ_HOME and the
+# ~/.claude-task-queue data directory.
+# $0 may use backslashes when a Windows path is passed to sh.
+case $0 in *[/\\]*) here=${0%[/\\]*} ;; *) here=. ;; esac
+script="$here/../scripts/mq.py"
+
+python=${MOA7AMED_QUEUE_PYTHON:-${CTQ_PYTHON:-}}
+if [ -n "$python" ]; then
+  exec "$python" "$script" "$@"
+fi
+
+# The data directory, by the same rules as the Python code: an explicit setting,
+# else the new directory, else the directory of an earlier version if only that exists.
+base=${USERPROFILE:-$HOME}
+if [ -n "${MOA7AMED_QUEUE_HOME:-}" ]; then
+  home=$MOA7AMED_QUEUE_HOME
+elif [ -n "${CTQ_HOME:-}" ]; then
+  home=$CTQ_HOME
+elif [ ! -d "$base/.moa7amed-queue" ] && [ -d "$base/.claude-task-queue" ]; then
+  home=$base/.claude-task-queue
+else
+  home=$base/.moa7amed-queue
+fi
+cache="$home/python-path"
+if [ -r "$cache" ]; then
+  IFS= read -r cached < "$cache"
+  if [ -n "$cached" ] && [ -x "$cached" ]; then
+    exec "$cached" "$script" "$@"
+  fi
+fi
+
+case ${OSTYPE:-} in
+  msys*|cygwin*|win*) candidates="python py python3" ;;
+  *) candidates="python3 python" ;;
+esac
+for candidate in $candidates; do
+  path=$(command -v "$candidate" 2>/dev/null) || continue
+  # Run a probe: on Windows a "python3" on PATH can be a Store placeholder that does nothing.
+  if "$path" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' >/dev/null 2>&1; then
+    mkdir -p "$home" 2>/dev/null && printf '%s\n' "$path" > "$cache" 2>/dev/null
+    exec "$path" "$script" "$@"
+  fi
+done
+
+echo "moa7amed-queue: Python 3.8 or newer was not found. Install Python or set MOA7AMED_QUEUE_PYTHON to its path." >&2
+exit 127

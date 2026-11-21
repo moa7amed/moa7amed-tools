@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="600" viewBox="0 0 1280 600" role="img" aria-labelledby="title desc">
+  <title id="title">Safe multi-agent analysis, stage A (diagram)</title>
+  <desc id="desc">Diagram. When justified, the queue starts read-only analysis agents at the same time, each a separate Claude Code session limited to the Read, Grep and Glob tools in dontAsk mode, working on a snapshot of the last commit. Their findings go to the coordinator, the task's own session, which is the only one that changes the live project and must verify the result. The live project is compared before and after the agents run; any change holds the task.</desc>
+  <style>
+    text { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; fill: #0f172a; }
+    .mono { font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace; }
+    .t { font-size: 19px; font-weight: 700; }
+    .s { font-size: 15px; fill: #334155; }
+    .agent { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1.5; }
+    .box { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+    .live { fill: #f0fdf4; stroke: #16a34a; stroke-width: 1.5; }
+    .arrow { stroke: #475569; stroke-width: 2; fill: none; marker-end: url(#a); }
+    .ro { stroke: #3b82f6; stroke-width: 2; fill: none; stroke-dasharray: 5 4; marker-end: url(#b); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/></marker>
+  </defs>
+  <rect width="1280" height="600" fill="#f8fafc"/>
+  <text x="40" y="52" font-size="26" font-weight="700">Concurrent analysis, one writer</text>
+  <text x="1240" y="52" font-size="15" fill="#64748b" text-anchor="end">Diagram · stage A · moa7amed-queue</text>
+
+  <rect class="box" x="40" y="100" width="300" height="190" rx="12"/>
+  <text class="t" x="60" y="134">Queue (rules, no model call)</text>
+  <text class="s" x="60" y="164">Picks only justified roles, e.g.</text>
+  <text class="s" x="60" y="188"><tspan class="mono">security_review</tspan>,</text>
+  <text class="s" x="60" y="212"><tspan class="mono">test_gap_analysis</tspan></text>
+  <text class="s" x="60" y="240">QUICK: none · STANDARD: ≤ 2</text>
+  <text class="s" x="60" y="264">Shared budget, bounded rounds</text>
+
+  <rect class="agent" x="420" y="90" width="400" height="96" rx="12"/>
+  <text class="t" x="440" y="122">Agent: security review</text>
+  <text class="s" x="440" y="148">separate <tspan class="mono">claude -p</tspan> · tools Read, Grep, Glob</text>
+  <text class="s" x="440" y="170">dontAsk · snapshot of HEAD · reports only</text>
+  <rect class="agent" x="420" y="206" width="400" height="96" rx="12"/>
+  <text class="t" x="440" y="238">Agent: test-gap analysis</text>
+  <text class="s" x="440" y="264">separate <tspan class="mono">claude -p</tspan> · tools Read, Grep, Glob</text>
+  <text class="s" x="440" y="286">dontAsk · snapshot of HEAD · reports only</text>
+  <text x="620" y="330" font-size="14" fill="#1d4ed8" text-anchor="middle">at the same time · each result carries its input revision</text>
+
+  <path class="arrow" d="M340,170 L416,140"/>
+  <path class="arrow" d="M340,215 L416,252"/>
+
+  <rect class="box" x="900" y="100" width="340" height="190" rx="12"/>
+  <text class="t" x="920" y="134">Integration (queue process)</text>
+  <text class="s" x="920" y="164">Findings kept for the coordinator</text>
+  <text class="s" x="920" y="188">Stale or duplicate results rejected</text>
+  <text class="s" x="920" y="212">Never accepted twice</text>
+  <text class="s" x="920" y="240">Approvals, prices and submission</text>
+  <text class="s" x="920" y="262">stay with you</text>
+  <path class="ro" d="M820,138 L896,160"/>
+  <path class="ro" d="M820,254 L896,230"/>
+
+  <rect class="live" x="420" y="390" width="820" height="150" rx="12"/>
+  <text class="t" x="440" y="424">Coordinator: the task's own session, the only writer</text>
+  <text class="s" x="440" y="452">Receives the findings, changes the live project, runs the checks it is allowed to run, and must report how it</text>
+  <text class="s" x="440" y="476">verified the result. The task completes only through it.</text>
+  <text class="s" x="440" y="512">Several agents writing code at the same time is not implemented (a future stage).</text>
+  <path class="arrow" d="M1070,290 L1070,386"/>
+
+  <rect class="box" x="40" y="390" width="300" height="150" rx="12"/>
+  <text class="t" x="60" y="424">Live project guard</text>
+  <text class="s" x="60" y="452">HEAD and <tspan class="mono">git status</tspan> are</text>
+  <text class="s" x="60" y="476">compared before and after the</text>
+  <text class="s" x="60" y="500">agents. Any change holds the</text>
+  <text class="s" x="60" y="524">task until you release it.</text>
+</svg>
