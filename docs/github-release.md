@@ -93,9 +93,8 @@ way; `main` and `publish` share no history.
 ## 6. Wait for CI
 
 Open **Actions**. The `CI` workflow runs the tests on Linux, Windows and macOS for
-several Python versions. It has **never run before**; expect to fix something (macOS
-has never been tested). Fix on a branch, merge, and do not tag until `CI` is green on
-`main`.
+several Python versions, and the release checks. Fix on a branch, merge, and do not tag
+until `CI` is green on `main`.
 
 Then, in **Settings**:
 
@@ -144,9 +143,14 @@ Going back to an earlier version, for users and maintainers:
 
 ## 11. After publishing
 
-- Remove the "Status: not published yet" notes from `README.md`,
-  `plugins/moa7amed-queue/README.md` and `docs/updates-and-rollback.md` once the hosted
-  install (step 8) and an update have been confirmed.
 - Verify the items under "Not verified yet" in [release-checklist.md](release-checklist.md)
   and correct the documentation where reality differs.
-- Do not describe CI as passing, or macOS as supported, before you have seen it.
+- Do not describe CI as passing, or a platform as supported, before you have seen it.
+
+## Where the first publication stands
+
+Done on 2026-11-21: steps 1 to 6 and 8. The repository is public, its first commit is
+the single-commit history described in step 5, CI passed on Linux, Windows and macOS,
+and installing from the hosted marketplace into an empty profile worked. Not done:
+step 7 (no tag, no GitHub release), the branch protection and vulnerability reporting
+settings in step 6, and an update from one published version to the next.

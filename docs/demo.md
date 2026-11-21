@@ -19,7 +19,8 @@ terminal; queued tasks are executed by Claude Code.
 
 WebM (VP9), 1920×1080, 10 frames per second, **silent**: there is no voice-over and no
 music. GitHub may not play a WebM file inline in every browser; the links open the file
-itself, which current browsers play. No hosted copy of the videos exists. The
+itself, which current browsers play. The videos are served from this repository only;
+no other hosted copy (for example a release asset) exists. The
 [storyboard](media/source/storyboard.md) holds every scene with its timing, the captions
 in both languages, and an English and an Arabic narration script for a voice-over that
 has not been recorded.

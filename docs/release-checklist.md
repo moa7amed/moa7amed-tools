@@ -31,15 +31,16 @@ can add it, and no update is delivered to anyone.
       git push -u origin main
       ```
 
-- [ ] **Watch the first CI run.** The workflows in `.github/workflows` have never run.
-      Expect to fix things: the test suite has run on Windows (Python 3.8, 3.9, 3.14)
-      and on Linux under WSL (3.12), never on macOS and never on a GitHub runner. Do
-      not tag until `CI` is green on `main`.
+- [x] **Watch the first CI run.** Done on 2026-11-21: every job passed (tests on
+      Linux with Python 3.8 to 3.13, Windows with 3.8 and 3.13, macOS with 3.10 and
+      3.13, and the release checks). Do not tag until `CI` is green on `main`.
 - [ ] **Protect `main`:** require the `CI` checks to pass before merging; no direct
       pushes.
 - [ ] **Turn on private vulnerability reporting** (Settings, Security), which
       `docs/security-and-privacy.md` tells reporters to use.
-- [ ] **Install from GitHub into an empty profile** and check it:
+- [x] **Install from GitHub into an empty profile** and check it (done on 2026-11-21:
+      0.8.0 installed and enabled, `moa7amed-queue doctor` healthy; a real session with
+      the hosted copy has not been run):
 
       ```bash
       export CLAUDE_CONFIG_DIR="$(mktemp -d)"        # an empty Claude Code profile
@@ -61,19 +62,19 @@ can add it, and no update is delivered to anyone.
       particular adding the marketplace at a tag and the automatic update. Correct
       `docs/updates-and-rollback.md` if reality differs, and remove its status note once
       it is confirmed.
-- [ ] Only now: remove the "Status: not published yet" notes from the root `README.md`
-      and from the plugin README. From here on the READMEs may say that updates are
-      delivered automatically to users who turn auto-update on.
+- [x] Remove the "not published yet" notes from the READMEs (done after the hosted
+      install was verified). Say that updates are delivered automatically to users who
+      turn auto-update on only once an update between two published versions has been
+      seen to work.
 
 ### Not verified yet
 
 | What | Why not | How to verify after publishing |
 | :-- | :-- | :-- |
-| `claude plugin marketplace add moa7amed/moa7amed-tools` from GitHub | The repository is not hosted | The install step above |
 | Adding the marketplace at a branch or tag (`#beta`, `#moa7amed-queue--v0.3.1`) | This CLI accepts no local git URL, so a ref cannot be tried offline | Add it at the release tag in an empty profile; `claude plugin list` must show that version |
 | The background auto-update pass and its notification | Needs a hosted marketplace and a second release | With auto-update on, publish the next version, start a session, wait up to ten minutes, look for `Plugin updated: moa7amed-queue` |
-| The GitHub workflows | They have never run | The first push |
-| The test suite on macOS | No Mac was available. (Python 3.8 has been run on Windows; Linux only on 3.12, under WSL) | The CI matrix: macOS with Python 3.10 and 3.13, Linux and Windows from 3.8 |
+| A real Claude Code session on macOS or Linux | No Mac was available, and the real CLI ran only on Windows. The test suites pass on both in CI, with a stand-in for Claude Code | Run the live checks (`tests/live_validation.py`) on a Mac and on Linux |
+| The release workflow (`release.yml`) | It runs only for a release tag, and none has been pushed | The first tag |
 | The `queue:` capture during a running turn on macOS and Linux, and with other Claude Code versions | Observed only with Claude Code 2.1.329 on Windows; Claude Code does not document it | Repeat the interactive check (type `queue: ...` while a tool runs; one task, no interruption) |
 | Auto-update of a private repository through git credential helpers | Not applicable until there is one | Only if the repository is made private |
 

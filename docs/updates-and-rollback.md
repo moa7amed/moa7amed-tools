@@ -6,11 +6,13 @@ an update, and how to go back.
 Claude Code performs every update. The plugins contain no updater of their own:
 `moa7amed-queue update` reports and advises, it never downloads or installs.
 
-> **Status.** The marketplace is not hosted publicly yet. Everything on this page that
-> involves the network (adding the marketplace from GitHub, following a branch or tag,
-> the background auto-update) is described from the Claude Code documentation and has
-> not been exercised against the hosted repository. What has been exercised, with the
-> real Claude Code CLI and a marketplace in a local folder, is marked **verified**.
+> **Status.** The marketplace is hosted on GitHub. Adding it from GitHub, installing
+> 0.8.0 and running `claude plugin marketplace update` / `claude plugin update` against it
+> were verified on 2026-11-21 in an empty profile. Following a branch or tag and the
+> background auto-update to a later version are described from the Claude Code
+> documentation and have not been exercised yet: they need a second published version.
+> What has been exercised with the real Claude Code CLI and a marketplace in a local
+> folder is marked **verified**.
 
 ## Updating by hand
 

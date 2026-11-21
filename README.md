@@ -7,11 +7,10 @@ Ramadan** and published as **moa7amed** ([moa7amed.com](https://moa7amed.com/),
 moa7amed@gmail.com). It is installed into Claude Code and executes queued tasks with the
 Claude Code CLI; it is not a Codex or Cursor extension (see [Compatibility](#compatibility)).
 
-> **Status: not published yet.** The GitHub install commands below work only once this
-> repository is public at the planned location `github.com/moa7amed/moa7amed-tools`
-> (a placeholder until then). Today, install from a clone by giving its folder. A
-> marketplace added from a folder receives no automatic updates. (Maintainers: remove
-> this note as part of the first public release; see the release checklist.)
+> **Status: published.** moa7amed-queue 0.8.0 is available from this repository's
+> marketplace on GitHub. Installing 0.8.0 from GitHub into an empty Claude Code profile was verified on 2026-11-21, and CI passes on Linux, Windows and macOS. Real Claude Code
+> execution has been verified on Windows only, and updating from one published version to
+> the next has not been tested yet: 0.8.0 is the first.
 
 ## moa7amed-queue
 
@@ -70,13 +69,13 @@ The current release, 0.8.0, is a Claude Code plugin. What works where:
 
 | Where | What works | Needs | Tested |
 | :-- | :-- | :-- | :-- |
-| **Claude Code CLI, plugin installed** (native) | Everything: the `/moa7amed-queue:...` skills, the `queue:` prompt hook, the runner, planning, Replica, BidStudio | Claude Code, Python 3.8+, git (recommended), `sh` for the hook | Real sessions with Claude Code 2.1.329 on Windows 11; test suites on Windows and on Linux (Ubuntu) |
+| **Claude Code CLI, plugin installed** (native) | Everything: the `/moa7amed-queue:...` skills, the `queue:` prompt hook, the runner, planning, Replica, BidStudio | Claude Code, Python 3.8+, git (recommended), `sh` for the hook | Real sessions with Claude Code 2.1.329 on Windows 11 only; installing from GitHub verified; test suites pass on Windows, Linux and macOS (CI) |
 | **`moa7amed-queue` command in a terminal** (standalone) | Queue management without a model: `add` (routing is local rules), `status`, `list`, `show`, `cancel`, `priority`, `config`, `usage`, and the `project`, `bid` and `replica` records | Python 3.8+ and the plugin's files (an installed plugin or a clone); see [the plugin README](plugins/moa7amed-queue/README.md#the-command-moa7amed-queue) | Windows, also with `claude` removed from `PATH`; Linux test suites |
 | **Executing tasks** (`run`, `launch`, the runners), from any terminal | Each task runs in a new Claude Code session (`claude -p`) | **The Claude Code CLI, installed and signed in.** Without it no task can start: the attempt is recorded as failed with the reason, and `doctor` reports Claude Code as missing | Windows with the real CLI |
 | **An editor's integrated terminal** (VS Code, Cursor, the shell of Codex or another tool) | The same as any terminal. This is terminal access, not an integration: tasks still run in Claude Code, not in the editor's own agent | As above | Not tested in Cursor or Codex |
 | **Claude Code's IDE extensions** (VS Code, JetBrains) | Not verified | | Not tested |
 | **Codex, Cursor or other agents, natively** | **Not implemented.** No adapters exist. Claude Code skills, hooks and plugin installation do not work in Codex or Cursor | | |
-| **macOS** | Expected to work like Linux, not verified | | Not tested (the CI workflow includes it) |
+| **macOS** | The test suites pass in CI (Python 3.10 and 3.13) | | No real Claude Code session on a Mac |
 
 ### Install
 
@@ -84,26 +83,25 @@ The install commands run **in a terminal** and use the Claude Code CLI (`claude`
 a Claude Code session the same steps are `/plugin marketplace add ...` and
 `/plugin install ...`.
 
-**From a local clone (works today):**
-
-```bash
-# in a terminal
-claude plugin marketplace add /path/to/moa7amed-tools
-claude plugin install moa7amed-queue@moa7amed-tools
-```
-
-A marketplace added from a folder receives no automatic updates; run
-`claude plugin marketplace update moa7amed-tools` after pulling new commits.
-
-**From GitHub (future, after the first public release).** The planned location is
-`github.com/moa7amed/moa7amed-tools`; it is a placeholder until the owner publishes the
-repository:
+**From GitHub (recommended):**
 
 ```bash
 # in a terminal
 claude plugin marketplace add moa7amed/moa7amed-tools
 claude plugin install moa7amed-queue@moa7amed-tools
 ```
+
+**From a local clone:**
+
+```bash
+# in a terminal
+git clone https://github.com/moa7amed/moa7amed-tools
+claude plugin marketplace add ./moa7amed-tools
+claude plugin install moa7amed-queue@moa7amed-tools
+```
+
+A marketplace added from a folder receives no automatic updates; run
+`claude plugin marketplace update moa7amed-tools` after pulling new commits.
 
 ### Quick start
 
@@ -229,13 +227,18 @@ turn on auto-update. Going back to an earlier version:
 | Challenge, discuss, then execute (`grillme`): evidence-backed concerns, owner decisions | implemented (0.8.0) |
 | Multi-agent stage B: parallel implementation writes with file ownership and integration | **roadmap, not implemented** |
 | Critical-path analysis, cost optimisation of architectures, drift detection beyond the post-task check, infrastructure benchmarking | roadmap |
-| Hosted marketplace on GitHub, automatic updates | prepared, not published (see [docs/github-release.md](docs/github-release.md)) |
+| Hosted marketplace on GitHub | published (0.8.0); installing from it verified |
+| Automatic updates between published versions | through Claude Code; not tested yet (needs a second published version) |
 
 ### Not verified yet
 
-- macOS (no Mac was available; the CI workflow includes it but has never run).
-- The GitHub Actions workflows (they run only after the repository is pushed).
-- Installing from the hosted marketplace and its automatic updates.
+- A real Claude Code session on macOS or Linux. Real execution was verified on Windows
+  only; on Linux, Windows and macOS the test suites pass in CI, with a stand-in for
+  Claude Code.
+- Updating from one published version to the next, including Claude Code's background
+  auto-update, and adding the marketplace at a branch or tag.
+- Claude Code's IDE extensions (VS Code, JetBrains). Codex and Cursor have no native
+  adapters: not implemented.
 - Multi-agent behaviour with Claude Code versions other than the one tested, and with
   MCP servers that write (outside the agents' tool restrictions).
 

@@ -98,21 +98,19 @@ The current release, 0.8.0, is a Claude Code plugin. What works where:
 
 | Where | What works | Needs | Tested |
 | :-- | :-- | :-- | :-- |
-| **Claude Code CLI, plugin installed** (native) | Everything: the `/moa7amed-queue:...` skills, the `queue:` prompt hook, the runner, planning, Replica, BidStudio | Claude Code, Python 3.8+, git (recommended), `sh` for the hook | Real sessions with Claude Code 2.1.329 on Windows 11; test suites on Windows and on Linux (Ubuntu) |
+| **Claude Code CLI, plugin installed** (native) | Everything: the `/moa7amed-queue:...` skills, the `queue:` prompt hook, the runner, planning, Replica, BidStudio | Claude Code, Python 3.8+, git (recommended), `sh` for the hook | Real sessions with Claude Code 2.1.329 on Windows 11 only; installing from GitHub verified; test suites pass on Windows, Linux and macOS (CI) |
 | **`moa7amed-queue` command in a terminal** (standalone) | Queue management without a model: `add` (routing is local rules), `status`, `list`, `show`, `cancel`, `priority`, `config`, `usage`, and the `project`, `bid` and `replica` records | Python 3.8+ and the plugin's files (an installed plugin or a clone); see [the plugin README](#the-command-moa7amed-queue) | Windows, also with `claude` removed from `PATH`; Linux test suites |
 | **Executing tasks** (`run`, `launch`, the runners), from any terminal | Each task runs in a new Claude Code session (`claude -p`) | **The Claude Code CLI, installed and signed in.** Without it no task can start: the attempt is recorded as failed with the reason, and `doctor` reports Claude Code as missing | Windows with the real CLI |
 | **An editor's integrated terminal** (VS Code, Cursor, the shell of Codex or another tool) | The same as any terminal. This is terminal access, not an integration: tasks still run in Claude Code, not in the editor's own agent | As above | Not tested in Cursor or Codex |
 | **Claude Code's IDE extensions** (VS Code, JetBrains) | Not verified | | Not tested |
 | **Codex, Cursor or other agents, natively** | **Not implemented.** No adapters exist. Claude Code skills, hooks and plugin installation do not work in Codex or Cursor | | |
-| **macOS** | Expected to work like Linux, not verified | | Not tested (the CI workflow includes it) |
+| **macOS** | The test suites pass in CI (Python 3.10 and 3.13) | | No real Claude Code session on a Mac |
 
 ## Install
 
 ### From the moa7amed-tools marketplace (recommended)
 
-> **Status: not published yet.** These two commands work once the repository is public
-> at `github.com/moa7amed/moa7amed-tools`. Until then use
-> [From a local clone](#from-a-local-clone) with the folder you have.
+> Installing 0.8.0 from GitHub into an empty Claude Code profile was verified on 2026-11-21.
 
 ```bash
 # in a terminal (uses the Claude Code CLI)
@@ -1682,9 +1680,13 @@ To offer the plugin to a whole team automatically, add the marketplace to a repo
 - **Ownership of files after a crash is a judgement by modification time.** A file you
   edit while a task runs looks like the task's. That is why `reconcile --commit` needs
   `--yes` and shows the list first.
-- **Not published yet.** Installing from GitHub, following a branch or tag, and Claude
-  Code's automatic update have not been exercised against a hosted copy of this
-  marketplace.
+- **Real Claude Code execution is verified on Windows only.** The test suites pass on
+  Linux, Windows and macOS in CI, with a stand-in for Claude Code.
+- **Updating between published versions is untested.** 0.8.0 is the first published
+  version. Installing it from GitHub is verified; following a branch or tag and Claude
+  Code's automatic update to a later version have not been exercised yet.
+- **Native integration targets Claude Code only.** Native Codex and Cursor adapters are
+  not implemented; see [Compatibility](#compatibility).
 - **Model availability cannot be listed.** The CLI offers no such command, so a model
   counts as available only after a run proved it. The first task that needs a tier you
   cannot use pays one refused request.
