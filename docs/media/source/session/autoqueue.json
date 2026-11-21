@@ -1,0 +1,77 @@
+{
+ "recorded": "2026-11-21",
+ "claude": "2.1.329",
+ "os": "Windows 11",
+ "replaced": [
+  "local fixture folder -> C:\\demo",
+  "host name -> demo-pc"
+ ],
+ "hook_replies": [
+  {
+   "reply": "Task #1 saved for project. Runner started. Not sent to Claude, so the current work is not interrupted. Claude Code leaves this text in the input box: press Esc twice to clear it. Progress: /moa7amed-queue:queue-status.",
+   "original_prompt": "queue: Create a file named alpha.txt containing exactly the word alpha. Acceptance criteria: alpha.txt exists and contains alpha."
+  },
+  {
+   "reply": "Task #2 saved for project. Waiting behind task #1. Not sent to Claude, so the current work is not interrupted. Claude Code leaves this text in the input box: press Esc twice to clear it. Progress: /moa7amed-queue:queue-status.",
+   "original_prompt": "queue: Create a file named beta.txt containing exactly the word beta. Acceptance criteria: beta.txt exists and contains beta."
+  },
+  {
+   "reply": "Task #3 saved for project. Waiting behind task #1. The text of task #2 that Claude Code had left in the input box was not saved again. Not sent to Claude, so the current work is not interrupted. Claude Code leaves this text in the input box: press Esc twice to clear it. Progress: /moa7amed-queue:queue-status.",
+   "original_prompt": "queue: Create a file named beta.txt containing exactly the word beta. Acceptance criteria: beta.txt exists and contains beta.queue: Create a file named"
+  }
+ ],
+ "steps": [
+  {
+   "command": "moa7amed-queue auto",
+   "lines": [
+    "Auto Queue  on; no runner; allowance $0.0224 of $0.30 used",
+    "Project     C:\\demo\\project",
+    "Tasks       0 pending, 0 running, 4 done, 0 failed, 0 cancelled",
+    "Allowance   $0.0224 of $0.30 reported since 2026-11-21 19:36:15"
+   ]
+  },
+  {
+   "command": "moa7amed-queue status",
+   "lines": [
+    "Queue   project  (C:\\demo\\project)",
+    "Runner  not running",
+    "Tasks   0 pending, 0 running, 4 done, 0 failed, 0 cancelled",
+    "Models  fixed model haiku for every task (per-task overrides still apply)",
+    "Auto    on; no runner; allowance $0.0224 of $0.30 used",
+    "",
+    "  (no tasks)",
+    "",
+    "Recently done:",
+    "    ID  PRIORITY STATE     TRIES MODEL         TITLE",
+    "     1  normal   done      1/2   haiku         Create a file named alpha.txt containing exactly the ...  [commit 1ca1655d99]",
+    "     2  normal   done      1/2   haiku         Create a file named beta.txt containing exactly the w...  [commit df561b71d2]",
+    "     3  normal   done      1/2   haiku         Create a file named gamma.txt containing exactly the ...  [commit 15bd0a7591]",
+    "     4  normal   done      1/2   haiku         Create a file named delta.txt containing exactly the ...  [commit 22a7b8f6b8]"
+   ]
+  },
+  {
+   "command": "moa7amed-queue history",
+   "lines": [
+    "2026-11-21 19:36:15  -     auto-enabled    allowance $0.30",
+    "2026-11-21 19:36:30  #1    added           priority=normal source=hook",
+    "2026-11-21 19:36:30  #1    auto-launch     runner started automatically (pid 31252)",
+    "2026-11-21 19:36:31  -     runner-start    runner 82642dbf423d (auto, pid 31252)",
+    "2026-11-21 19:36:33  #1    started         attempt 1/2 in C:\\demo\\project; model ha...",
+    "2026-11-21 19:36:37  #2    added           priority=normal source=hook",
+    "2026-11-21 19:36:40  #3    added           priority=normal source=hook",
+    "2026-11-21 19:37:04  #1    done            Created alpha.txt in the project directory containing exactly \"alpha\" and verified its existence and bytes. [commit 1ca1655d99] [ran on claude-haik...",
+    "2026-11-21 19:37:04  #2    started         attempt 1/2 in C:\\demo\\project; model ha...",
+    "2026-11-21 19:37:28  #2    done            Created beta.txt containing exactly \"beta\" in the project root. [commit df561b71d2] [ran on claude-haiku-5-5]",
+    "2026-11-21 19:37:28  #3    started         attempt 1/2 in C:\\demo\\project; model ha...",
+    "2026-11-21 19:37:49  #3    done            Created gamma.txt containing exactly \"gamma\" in the project root; verified existence and byte contents. [commit 15bd0a7591] [ran on claude-haiku-5-5]",
+    "2026-11-21 19:38:19  -     runner-stop     runner 82642dbf423d ran 3 task(s)",
+    "2026-11-21 19:38:20  #4    added           priority=normal source=cli",
+    "2026-11-21 19:38:21  #4    auto-launch     runner started automatically (pid 18072)",
+    "2026-11-21 19:38:22  -     runner-start    runner 6ebe4943119a (auto, pid 18072)",
+    "2026-11-21 19:38:23  #4    started         attempt 1/2 in C:\\demo\\project; model ha...",
+    "2026-11-21 19:38:43  #4    done            Created delta.txt containing exactly \"delta\" in the project root (uncommitted). [commit 22a7b8f6b8] [ran on claude-haiku-5-5]",
+    "2026-11-21 19:39:13  -     runner-stop     runner 6ebe4943119a ran 1 task(s)"
+   ]
+  }
+ ]
+}

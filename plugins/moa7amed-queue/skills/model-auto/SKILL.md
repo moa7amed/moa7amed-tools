@@ -1,6 +1,6 @@
 ---
 name: model-auto
-description: Set the model of queued tasks (opus, sonnet, haiku) or return them to automatic selection, and explain which model a task will use.
+description: Set the model of queued tasks (opus, sonnet, haiku) or back to automatic, and explain which model a task uses.
 argument-hint: "<task ids | --pending | --whole-project>"
 allowed-tools:
   - Bash(sh "${CLAUDE_PLUGIN_ROOT}/bin/moa7amed-queue" *)

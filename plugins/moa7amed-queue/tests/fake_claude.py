@@ -253,6 +253,7 @@ def main():
         model=requested, phase=phase,
         runner_env=os.environ.get("MOA7AMED_QUEUE_RUNNER"),
         project_env=os.environ.get("MOA7AMED_QUEUE_PROJECT"),
+        session_env=os.environ.get("CLAUDECODE"),
         legacy_env={name: os.environ.get(name) for name in ("CTQ_RUNNER", "CTQ_TASK_ID",
                                                             "CTQ_PROJECT")})
 

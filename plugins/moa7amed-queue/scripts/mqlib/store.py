@@ -197,7 +197,9 @@ def parse_id_list(values):
 class Queue(object):
     """The task queue of one project."""
 
-    def __init__(self, root):
+    def __init__(self, root, timeout=60):
+        """`timeout` (seconds) is how long a write waits for another process's transaction;
+        the capture hook uses a short one so that it always answers in time."""
         self.root = root
         self.start = root  # directory the command was started from (set by the CLI)
         self.key = util.project_key(root)
@@ -205,9 +207,9 @@ class Queue(object):
         self.db_path = os.path.join(self.dir, "queue.db")
         os.makedirs(self.dir, exist_ok=True)
         self._depth = 0
-        self.conn = sqlite3.connect(self.db_path, timeout=60, isolation_level=None)
+        self.conn = sqlite3.connect(self.db_path, timeout=timeout, isolation_level=None)
         self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA busy_timeout = 60000")
+        self.conn.execute("PRAGMA busy_timeout = %d" % int(timeout * 1000))
         self.conn.execute("PRAGMA foreign_keys = ON")
         self._init_schema()
         info_path = os.path.join(self.dir, "project.json")
@@ -239,9 +241,10 @@ class Queue(object):
                               (self.root,))
 
     def _ensure_additive(self):
-        from . import challenge, workflow
+        from . import autoqueue, challenge, workflow
         workflow.ensure_schema(self.conn)
         challenge.ensure_schema(self.conn)
+        autoqueue.ensure_schema(self.conn)
         self._ensure_process_tokens()
 
     def _ensure_process_tokens(self):
@@ -383,7 +386,11 @@ class Queue(object):
 
     def add(self, prompt, acceptance=None, title=None, priority=0, after=None,
             max_attempts=None, source="cli", session_id=None, workdir="", model=None,
-            phased=None):
+            phased=None, request_id=None):
+        """Save a task and return its id. With a `request_id`, a second submission carrying
+        the same id returns the task saved the first time (self.last_add_was_repeat is then
+        True); without one, every call saves a new task, also for identical text."""
+        self.last_add_was_repeat = False
         prompt = (prompt or "").replace("\r\n", "\n").strip("\n")
         if not prompt.strip():
             raise QueueError("cannot queue an empty prompt")
@@ -395,6 +402,12 @@ class Queue(object):
             raise QueueError("max attempts must be at least 1")
         stamp = util.now_iso()
         with self.tx():
+            if request_id:
+                from . import autoqueue
+                earlier = autoqueue.known_request(self, request_id)
+                if earlier is not None:
+                    self.last_add_was_repeat = True
+                    return earlier
             for dep in after or []:
                 self.get(dep)
             cursor = self.conn.execute(
@@ -403,6 +416,9 @@ class Queue(object):
                 (title, prompt, acceptance, workdir or "", int(priority), int(max_attempts),
                  source, session_id, stamp, stamp))
             task_id = cursor.lastrowid
+            if request_id:
+                from . import autoqueue
+                autoqueue.remember_request(self, request_id, task_id, source)
             for dep in after or []:
                 self.conn.execute("INSERT OR IGNORE INTO task_deps(task_id, depends_on) VALUES(?,?)",
                                   (task_id, dep))

@@ -12,7 +12,7 @@ import subprocess
 import sys
 import time
 
-from . import engine, models, routing, util
+from . import autoqueue, engine, models, routing, util
 from .util import QueueError
 
 EXIT_OK = 0
@@ -23,6 +23,8 @@ HEARTBEAT_SECONDS = 30
 # Runner settings: name -> PowerShell parameter. Shared by `moa7amed-queue run` and `moa7amed-queue launch`.
 RUNNER_FLAGS = {"max_tasks": "MaxTasks", "poll_seconds": "PollSeconds", "watch": "Watch",
                 "stop_on_failure": "StopOnFailure", "force": "Force"}
+# Only the portable runner has these; Auto Queue always starts the portable runner.
+PYTHON_RUNNER_FLAGS = ("idle_timeout", "auto")
 
 
 resolve_claude = models.resolve_claude
@@ -151,20 +153,42 @@ def plan(q, options):
             "options": config}
 
 
+def _wait(q, runner_id, seconds):
+    """Sleep up to `seconds`, waking early when a submission touches the wake file."""
+    start_stamp = autoqueue.wake_stamp(q)
+    deadline = time.time() + max(1, seconds)
+    while time.time() < deadline:
+        time.sleep(min(1.0, max(0.05, deadline - time.time())))
+        if autoqueue.wake_stamp(q) != start_stamp:
+            break
+    engine.heartbeat(q, runner_id)
+
+
 def run(q, options=None, max_tasks=0, watch=False, poll_seconds=15, stop_on_failure=False,
-        force=False, quiet=False):
-    """Execute queued tasks one after another until the queue has nothing runnable."""
+        force=False, quiet=False, idle_timeout=0, auto=False):
+    """Execute queued tasks one after another until the queue has nothing runnable.
+
+    With `watch` the runner waits for new tasks; with `idle_timeout` (seconds) it exits once
+    it has had nothing to do for that long. `auto` marks a runner started by Auto Queue: it
+    counts against the automatic-execution allowance."""
     log = RunnerLog(q, quiet)
+    kind = autoqueue.RUNNER_KIND if auto else "python"
     try:
-        acquired = engine.acquire(q, os.getpid(), options, kind="python", force=force)
+        acquired = engine.acquire(q, os.getpid(), options, kind=kind, force=force)
     except QueueError as exc:
+        if auto and isinstance(exc, engine.LockHeld):
+            autoqueue.runner_lost_race(q, os.getpid())
+            log("not started: another runner already works on this project; it runs the "
+                "queued tasks")
+            return exc.code
         log("cannot start: %s" % exc)
         return exc.code
     runner_id = acquired["runner_id"]
-    log("runner %s started for %s" % (runner_id, q.root))
+    log("runner %s started for %s%s" % (runner_id, q.root, " (Auto Queue)" if auto else ""))
     for item in acquired["recovered"]:
         log(item["message"])
     executed, failures, exit_code = 0, 0, EXIT_OK
+    idle_since, said = None, None
     try:
         while True:
             if max_tasks and executed >= max_tasks:
@@ -173,22 +197,43 @@ def run(q, options=None, max_tasks=0, watch=False, poll_seconds=15, stop_on_fail
             claim = engine.claim(q, runner_id)
             if claim["action"] == "stop":
                 log("STOPPED: %s" % claim["message"])
-                exit_code = claim.get("exit_code") or engine.EXIT_WORKSPACE_STOP
+                exit_code = claim["exit_code"] if "exit_code" in claim and \
+                    claim["exit_code"] is not None else engine.EXIT_WORKSPACE_STOP
+                if auto:
+                    autoqueue.record_stop(q, claim.get("reason"), claim["message"])
                 break
             if claim["action"] == "idle":
+                if claim["reason"] == "paused":
+                    log("paused: %s" % claim["message"])
+                    break
                 if claim["reason"] == "backoff":
                     log(claim["message"])
-                    time.sleep(min(claim["wait_seconds"], max(1, poll_seconds)))
-                    engine.heartbeat(q, runner_id)
+                    _wait(q, runner_id, min(claim["wait_seconds"], max(1, poll_seconds)))
+                    idle_since = None
+                    continue
+                idle_since = idle_since or time.time()
+                if watch and not (idle_timeout and time.time() - idle_since >= idle_timeout):
+                    if claim["message"] != said:
+                        log("waiting for tasks: %s" % claim["message"])
+                        said = claim["message"]
+                    left = idle_timeout - (time.time() - idle_since) if idle_timeout else None
+                    _wait(q, runner_id, min(poll_seconds, left) if left else poll_seconds)
+                    continue
+                # Leave only if nothing became runnable in the meantime (see release_if_idle).
+                if not engine.release_if_idle(q, runner_id):
+                    idle_since, said = None, None
                     continue
                 if watch:
-                    time.sleep(max(1, poll_seconds))
-                    engine.heartbeat(q, runner_id)
-                    continue
-                log("nothing more to run: %s" % claim["message"])
+                    log("no task for %d s; exiting (the next queued task starts a runner again)"
+                        % idle_timeout if auto else "no task for %d s; exiting" % idle_timeout)
+                else:
+                    log("nothing more to run: %s" % claim["message"])
+                if auto:
+                    autoqueue.record_stop(q, "idle", claim["message"])
                 if claim["reason"] == "blocked":
                     exit_code = EXIT_TASK_FAILED
                 break
+            idle_since, said = None, None
             log("task #%d started (attempt %d/%d)%s%s: %s"
                 % (claim["task_id"], claim["attempt"], claim["max_attempts"],
                    claim["model_note"], claim.get("budget_note") or "", claim["title"]))
@@ -261,7 +306,7 @@ def launch(q, options=None, runner_flags=None, hidden=False, engine_kind=None):
             flag = "--" + key.replace("_", "-")
             for item in (value if isinstance(value, list) else [value]):
                 command.append("%s=%s" % (flag, item))  # '=' keeps values that start with '-'
-        for name in RUNNER_FLAGS:
+        for name in tuple(RUNNER_FLAGS) + PYTHON_RUNNER_FLAGS:
             value = runner_flags.get(name)
             if value is True:
                 command.append("--" + name.replace("_", "-"))
@@ -273,24 +318,30 @@ def launch(q, options=None, runner_flags=None, hidden=False, engine_kind=None):
 
 
 def _detach(command, cwd, hidden, log_path):
-    env = dict(os.environ)
+    env = autoqueue.detached_env()   # not tied to the Claude Code session that started it
+    out_path = os.path.join(os.path.dirname(log_path), "launch.out")
     if not util.IS_WINDOWS:
-        out = open(os.path.join(os.path.dirname(log_path), "launch.out"), "ab")
-        return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=out,
-                                stderr=subprocess.STDOUT, start_new_session=True)
+        with open(out_path, "ab") as out:   # the child keeps its own copy of the handle
+            return subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                                    stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
     new_console, no_window, breakaway = 0x00000010, 0x08000000, 0x01000000
     kwargs = {"cwd": cwd, "env": env, "close_fds": True}
+    out = None
     if hidden:
-        out = open(os.path.join(os.path.dirname(log_path), "launch.out"), "ab")
+        out = open(out_path, "ab")
         kwargs.update(stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT)
         flags = no_window
     else:
         flags = new_console
     try:
-        # Leave the job object of the calling session so the runner outlives it.
-        return subprocess.Popen(command, creationflags=flags | breakaway, **kwargs)
-    except OSError:
-        return subprocess.Popen(command, creationflags=flags, **kwargs)
+        try:
+            # Leave the job object of the calling session so the runner outlives it.
+            return subprocess.Popen(command, creationflags=flags | breakaway, **kwargs)
+        except OSError:
+            return subprocess.Popen(command, creationflags=flags, **kwargs)
+    finally:
+        if out is not None:
+            out.close()
 
 
 def to_json(data):

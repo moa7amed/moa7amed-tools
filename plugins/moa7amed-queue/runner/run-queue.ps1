@@ -385,10 +385,14 @@ try {
             if ($claim.action -eq 'stop') {
                 Write-Log ("STOPPED: " + $claim.message)
                 $exitCode = 3
-                if ($claim.PSObject.Properties['exit_code'] -and $claim.exit_code) { $exitCode = [int]$claim.exit_code }
+                if ($claim.PSObject.Properties['exit_code'] -and $null -ne $claim.exit_code) { $exitCode = [int]$claim.exit_code }
                 break
             }
             if ($claim.action -eq 'idle') {
+                if ($claim.reason -eq 'paused') {
+                    Write-Log ("paused: " + $claim.message)
+                    break
+                }
                 if ($claim.reason -eq 'backoff') {
                     Write-Log $claim.message
                     Start-Sleep -Seconds ([Math]::Min([int]$claim.wait_seconds, [Math]::Max(1, $PollSeconds)))

@@ -3,6 +3,72 @@
 Versions 0.1.0 and 0.2.0 were published as **claude-task-queue** with the command `ctq`;
 their entries below describe them under those names.
 
+## 0.9.0
+
+Auto Queue: install once, enable per project, submit with `queue:`, and the queue runs
+by itself. Nothing changes for a project until you turn it on there; queues, settings and
+data of 0.8.0 keep working (one new, additive table), and going back to 0.8.0 is possible.
+
+- `moa7amed-queue auto enable` (or `/moa7amed-queue:auto enable`) first shows what it means
+  for this project (folder, runner permissions, workspace, cost allowance, idle timeout,
+  how to pause and stop) and changes nothing; `--yes` turns it on. Options: `--worktree`,
+  `--budget USD`, `--no-budget`. The choice is stored in the project's settings
+  (`auto_queue_enabled`); it is ignored in the global settings file, and setting it with
+  `--global` is refused. A queued task cannot turn it on.
+- With Auto Queue on, an explicit submission (`queue:` prompt, `/moa7amed-queue:queue-add`,
+  `moa7amed-queue add`) is saved in the queue database first; then, outside any database
+  transaction, the ordinary
+  portable runner is started hidden in the background if none holds the project's lock
+  (`moa7amed-queue run --watch` with an idle timeout). Short replies: `Task #42 saved.
+  Runner started.`, `Waiting behind task #41.`, `Automatic execution is paused.`,
+  `Blocked: ...`, `Runner launch failed: <reason>` (the task stays pending). Ordinary
+  messages are never captured.
+- One runner per project, through the existing lock: concurrent submissions start at most
+  one process (a start is reserved in the database first), a runner that loses the race
+  exits without losing anything, and the lock's process id plus start time keep a reused
+  process id from being mistaken for the runner.
+- Idle timeout (`auto_queue_idle_timeout_seconds`, 300): the runner sleeps until woken by a
+  submission and exits after that long without work. It releases the lock only in the
+  transaction that confirms nothing is runnable, so a task saved at that moment is never
+  stranded. Commands that make work runnable (approval, decision, retry, new plan tasks)
+  start a runner too. Failed starts stop after `auto_queue_launch_retry_limit` (3) in a
+  row until `auto resume`; blocked work starts no runners.
+- `auto pause` / `resume` (no new task is claimed, by any runner of the project; the
+  running task finishes; survives restarts), `auto stop` (exit after the current task),
+  `auto stop --now --yes` (stops only the recorded runner and task processes; the task is
+  held for review, not retried; changes stay; automatic execution paused), `auto disable`
+  (no more automatic starts; tasks kept), `auto start`, `auto blockers`, and `auto` for
+  the state. The PowerShell runner also stops claiming while paused.
+- Allowance for automatic runs (`auto_queue_budget_usd`, $5 unless chosen otherwise when
+  enabling): counted from when it was granted, across runner restarts, from the costs
+  Claude Code reports (runs without a reported cost are counted separately, never
+  estimated); a task never gets more than what is left as `--max-budget-usd`. When it is
+  used up, tasks stay pending until `auto budget --renew` or `--set USD`.
+  `cost_limit_run_usd` still counts per runner session.
+- `moa7amed-queue add --request-id ID`: a second submission with the same id returns the
+  first task. The capture hook uses Claude Code's `prompt_id`, so one prompt seen twice is
+  saved once; identical text without an id is always a new task.
+- A runner started in the background no longer inherits the identifiers of the Claude
+  Code session that started it (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, the messaging
+  socket and token, ...); provider and configuration variables are kept. This applies to
+  `moa7amed-queue launch` and `/moa7amed-queue:queue-run` as well.
+- `moa7amed-queue run --idle-timeout SECONDS` (with `--watch`) for runners you start
+  yourself. `status` shows an `Auto` line when Auto Queue is on or paused.
+- The prompt hook is bounded well within Claude Code's 30 s limit (8 s for the queue
+  database, 5 s for the workspace check, 12 s for starting a runner; a backup after an update
+  is left to the next command) and carries `onFailure: "block"`: when it fails or runs out of
+  time, Claude Code blocks the prompt instead of also sending it to Claude (verified with
+  2.1.329; documented from 2.1.295). A locked queue database is reported and the prompt is not
+  saved and not sent.
+- Text that Claude Code restored into the input box is never saved twice. A new
+  `queue: ...` request typed straight after it is saved on its own; any other text after it
+  is neither saved nor sent, the reply quotes it, and `history` keeps it (`intake-refused`).
+- Enabling again, resuming and restarting never renew an exhausted allowance; `auto enable`
+  shows the allowance used so far. Runs that report no usage are listed as unknown, never as
+  $0, and `auto enable` says that the limits are soft and buy or reserve nothing.
+- New skill `/moa7amed-queue:auto`, and a listing icon (`assets/icon.png`; source
+  docs/media/source/icon.svg). Guide: docs/auto-queue.md.
+
 ## 0.8.0
 
 Multi-agent foundation (stage A): one coordinator, concurrent read-only analysis agents,

@@ -6,8 +6,8 @@ start, in this order, after the previous step succeeded.
 
 The public history starts with a single commit holding the validated tree of 0.8.0; the
 development history before it stays local (step 5). Nothing in the repository may
-depend on commits that are not public: `release/baselines.json` therefore lists no
-earlier version yet, and later releases add 0.8.0 by its public commit or tag.
+depend on commits that are not public: `release/baselines.json` lists only versions of
+the public history (0.8.0 by its public commit, from 0.9.0 on).
 
 The location `github.com/moa7amed/moa7amed-tools` is used in the manifests and READMEs.
 If you choose another owner or name, change it first (step 2).

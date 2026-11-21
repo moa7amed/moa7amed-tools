@@ -1,3 +1,12 @@
 {
-  "moa7amed-queue": []
+  "moa7amed-queue": [
+    {
+      "version": "0.8.0",
+      "commit": "021acd23e048203ddb83649254d20ee608f11df7",
+      "root": "plugins/moa7amed-queue",
+      "cli": "scripts/mq.py",
+      "update_in_place": true,
+      "note": "the first public release (the first commit of the public history)"
+    }
+  ]
 }

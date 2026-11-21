@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">moa7amed-queue icon</title>
+  <desc id="desc">Three queued tasks as horizontal bars, the first one highlighted, next to a check mark: queue, then verify. Colours of the moa7amed-queue banner.</desc>
+  <rect width="1024" height="1024" fill="#0f172a"/>
+  <g transform="translate(-7 29)">
+  <rect x="152" y="300" width="468" height="116" rx="58" fill="#5eead4"/>
+  <rect x="152" y="454" width="468" height="116" rx="58" fill="#334155"/>
+  <rect x="155" y="611" width="462" height="110" rx="55" fill="#1e293b" stroke="#64748b" stroke-width="8"/>
+  <circle cx="774" cy="358" r="98" fill="none" stroke="#5eead4" stroke-width="30"/>
+  <path d="M726 360 L762 396 L826 330" fill="none" stroke="#5eead4" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

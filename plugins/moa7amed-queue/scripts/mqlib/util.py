@@ -464,6 +464,19 @@ CONFIG_SPEC = {
                           "warn when one runner session is reported to cost at least this much"),
     "cost_limit_run_usd": ("float", None,
                            "start no further task once a runner session has cost this much"),
+    # --- Auto Queue (per project, opt-in) ---
+    "auto_queue_enabled": ("bool", False,
+                           "start a runner automatically when a task is saved (this project "
+                           "only; `moa7amed-queue auto enable`)"),
+    "auto_queue_idle_timeout_seconds": ("int", 300,
+                                        "an automatic runner exits after this long without a "
+                                        "task (the next task starts one again)"),
+    "auto_queue_launch_retry_limit": ("int", 3,
+                                      "failed automatic launches in a row before automatic "
+                                      "launching stops (0 = no limit)"),
+    "auto_queue_budget_usd": ("float", None,
+                              "automatic runs stop once this much has been reported since the "
+                              "allowance was granted (0 or unset = no allowance)"),
     # --- automatic model routing ---
     "routing_enabled": ("bool", True, "choose a model for each task automatically"),
     "routing_mode": ("choice:balanced|quality_first|cost_optimized", "balanced",
@@ -588,10 +601,18 @@ def project_config_path(pdir):
     return os.path.join(pdir, "config.json")
 
 
+# Settings that only a project's own settings file may turn on: installing the plugin, or
+# a global setting, must never make every project execute tasks by itself.
+PROJECT_ONLY_KEYS = ("auto_queue_enabled",)
+
+
 def effective_config(pdir=None, overrides=None):
     """defaults < global config < project config < overrides (None values are skipped)."""
     config = {key: spec[1] for key, spec in CONFIG_SPEC.items()}
-    sources = [load_json(global_config_path(), {}) or {}]
+    glob = dict(load_json(global_config_path(), {}) or {})
+    for key in PROJECT_ONLY_KEYS:
+        glob.pop(key, None)
+    sources = [glob]
     if pdir:
         sources.append(load_json(project_config_path(pdir), {}) or {})
     sources.append(overrides or {})

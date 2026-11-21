@@ -47,6 +47,9 @@ nothing outside its own folder. That one fact drives most rules in this reposito
                                         engine.py       lock, claim, finish, recovery
                                         routing.py      model selection per task and run
                                         workflow.py     quick/standard/deep process per task
+                                        autoqueue.py    Auto Queue: opt-in per project, starts a
+                                                        runner after a task is saved, pause,
+                                                        stop, allowance, request ids
                                         challenge*.py   concerns, owner decisions and their
                                                         provenance, decision holds, CLI
                                         agents*.py      multi-agent execution: evaluation,

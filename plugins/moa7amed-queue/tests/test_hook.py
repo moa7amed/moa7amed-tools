@@ -147,8 +147,31 @@ class CaptureHook(QueueTestCase):
         self.assertIn('"Also fix the typo"', extended["reason"])
         self.assertEqual([task["prompt"] for task in self.queue().tasks()],
                          ["write the release notes"])
+        self.assertIn("NOT sent to Claude", extended["reason"])
+        refused = [row for row in self.queue().events(limit=50) if row["type"] == "intake-refused"]
+        self.assertIn("Also fix the typo", refused[-1]["detail"])     # kept for the owner
         # After clearing the input box, new text is queued as usual.
         self.assertIn("Queued as task #2", self.hook("queue: also fix the typo")["reason"])
+
+    def test_a_new_request_typed_after_the_restored_text_is_queued_alone(self):
+        # Observed with a real interactive session (2.1.329): the restored text of task A,
+        # then the next request typed straight after it, with its own prefix.
+        self.hook("queue: write the release notes")
+        combined = self.hook("queue: write the release notesqueue: update the changelog")
+        self.assertEqual(combined["decision"], "block")
+        self.assertIn("Queued as task #2", combined["reason"])
+        self.assertIn("text of task #1", combined["reason"])
+        self.assertIn("not saved again", combined["reason"])
+        # Several restored prompts in a row: only the last, new request is saved.
+        chained = self.hook("queue: write the release notesqueue: update the changelog"
+                            "queue: tag nothing yet")
+        self.assertIn("Queued as task #3", chained["reason"])
+        self.assertEqual([task["prompt"] for task in self.queue().tasks()],
+                         ["write the release notes", "update the changelog", "tag nothing yet"])
+        # Nothing after the second prefix: nothing saved.
+        empty = self.hook("queue: tag nothing yetqueue:")
+        self.assertIn("NOT queued", empty["reason"])
+        self.assertEqual(len(self.queue().tasks()), 3)
 
     def test_the_same_request_from_another_session_is_queued(self):
         self.hook("queue: write the release notes")

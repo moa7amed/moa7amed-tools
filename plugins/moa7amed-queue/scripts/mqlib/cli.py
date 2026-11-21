@@ -6,8 +6,8 @@ import json
 import os
 import sys
 
-from . import (DESCRIPTION, LEGACY_COMMAND, NAME, PUBLISHER, TAGLINE, __version__, engine,
-               gitops, hook, maintenance, models, pyrunner, routing, store, util)
+from . import (DESCRIPTION, LEGACY_COMMAND, NAME, PUBLISHER, TAGLINE, __version__, autoqueue,
+               engine, gitops, hook, maintenance, models, pyrunner, routing, store, util)
 from .util import QueueError
 
 EPILOG = """\
@@ -216,8 +216,15 @@ def cmd_add(q, args):
                     priority=store.parse_priority(args.priority),
                     after=store.parse_id_list(args.after), max_attempts=args.max_attempts,
                     source=args.source, session_id=args.session_id, workdir=workdir,
-                    model=args.model, phased=True if args.phased else None)
+                    model=args.model, phased=True if args.phased else None,
+                    request_id=args.request_id)
     task = q.get(task_id)
+    if q.last_add_was_repeat:
+        data = q.task_dict(task)
+        data["repeat"] = True
+        emit(args, data, "Already saved as task #%d (request id %s); not saved again."
+             % (task_id, args.request_id))
+        return 0
     text = "Queued task #%d [%s] %s" % (task_id, store.priority_label(task["priority"]),
                                         task["title"])
     from . import challenge
@@ -247,7 +254,13 @@ def cmd_add(q, args):
     if task["acceptance"]:
         text += "\n  acceptance criteria recorded (%d characters)" % len(task["acceptance"])
     text += "\n  queue: %s (%s)" % (os.path.basename(q.root), counts_line(q.counts()))
-    emit(args, q.task_dict(task), text)
+    data = q.task_dict(task)
+    if not args.no_auto:
+        auto = autoqueue.ensure_runner(q, config, task_id)
+        data["auto"] = auto
+        if auto["state"] != "manual":
+            text += "\nTask #%d saved. %s" % (task_id, auto["message"] or "")
+    emit(args, data, text)
     return 0
 
 
@@ -283,6 +296,11 @@ def cmd_status(q, args):
              "Runner  %s" % runner_line(info),
              "Tasks   %s" % counts_line(counts),
              "Models  %s" % routing_text]
+    auto = autoqueue.runner_state(q, config)
+    data["auto"] = {"enabled": auto["enabled"], "paused": bool(auto["paused"]),
+                    "runner": auto["runner"], "allowance": auto["allowance"]}
+    if auto["enabled"] or auto["paused"]:
+        lines.append("Auto    %s" % autoqueue.status_line(auto))
     if util.home_info()[1] == "legacy":
         lines.append("Data    %s (from before 0.3.0, still fully supported; `%s migrate` moves "
                      "it to %s)" % (util.home(), NAME, util.default_home()))
@@ -645,6 +663,11 @@ def cmd_config(args):
         return 0
     if util.config_key(args.key or "") == "capture_prefix" and not args.use_global:
         raise QueueError("capture_prefix applies to every project; add --global")
+    if util.config_key(args.key or "") in util.PROJECT_ONLY_KEYS and args.use_global \
+            and args.action == "set":
+        raise QueueError("%s applies to one project only, so that installing the plugin never "
+                         "makes every project execute tasks by itself. Use `%s auto enable` in "
+                         "the project." % (util.config_key(args.key), NAME))
     if args.key is not None:
         args.key = util.config_key(args.key)
     current = util.load_json(path, {}) or {}
@@ -1447,7 +1470,8 @@ def options_from_args(args):
 
 
 def runner_flags_from_args(args):
-    return {name: getattr(args, name, None) for name in pyrunner.RUNNER_FLAGS}
+    return {name: getattr(args, name, None)
+            for name in tuple(pyrunner.RUNNER_FLAGS) + pyrunner.PYTHON_RUNNER_FLAGS}
 
 
 def cmd_plan(q, args):
@@ -1482,13 +1506,162 @@ def _refuse_inside_worker(what):
         raise QueueError("%s is not allowed inside a worker of a multi-agent task" % what)
 
 
+def cmd_auto(q, args):
+    """Auto Queue for this project: status, enable, pause, resume, stop, disable, budget."""
+    action = args.action
+    config = util.effective_config(q.dir)
+    if action in ("enable", "resume", "start") and util.env("RUNNER"):
+        raise QueueError("a queued task cannot change Auto Queue; only the owner can")
+    _refuse_inside_worker("changing Auto Queue")
+    if action == "status":
+        state = autoqueue.runner_state(q, config)
+        blockers = autoqueue.blockers(q, config)
+        lines = ["Auto Queue  %s" % autoqueue.status_line(state),
+                 "Project     %s" % q.root,
+                 "Tasks       %s" % counts_line(q.counts())]
+        if state["allowance"]:
+            spent = state["allowance"]
+            lines.append("Allowance   $%.4f of $%.2f reported since %s%s"
+                         % (spent["spent_usd"], spent["limit_usd"], util.local_time(spent["since"]),
+                            "; %d run(s) reported no cost" % spent["unknown_runs"]
+                            if spent["unknown_runs"] else ""))
+        if not state["enabled"]:
+            lines.append("Turn on     `%s auto enable` (shows what it means first)" % NAME)
+        for line in blockers:
+            lines.append("Blocker     %s" % line)
+        state["blockers"] = blockers
+        emit(args, state, "\n".join(lines))
+        return 0
+    if action == "blockers":
+        blockers = autoqueue.blockers(q, config)
+        emit(args, blockers, "\n".join(blockers) or "Nothing blocks automatic execution.")
+        return 0
+    if action == "enable":
+        budget = 0.0 if args.no_budget else (args.budget if args.budget is not None else
+                                             config["auto_queue_budget_usd"] or 5.0)
+        preview = dict(config)
+        if args.worktree:
+            preview["workspace"] = "worktree"
+        text = autoqueue.describe_enable(q, preview, budget)
+        so_far = autoqueue.allowance(q, dict(preview, auto_queue_budget_usd=budget)) \
+            if autoqueue._meta(q, "auto_budget") else None
+        if so_far:
+            text += ("\n  Allowance so far: $%.4f of $%.2f reported since %s%s; enabling again "
+                     "does not renew it.%s" % (so_far["spent_usd"], so_far["limit_usd"],
+                                               util.local_time(so_far["since"]),
+                                               "; %d run(s) with unknown cost"
+                                               % so_far["unknown_runs"]
+                                               if so_far["unknown_runs"] else "",
+                                               " It is used up." if so_far["exhausted"] else ""))
+        if autoqueue.paused(q):
+            text += "\n  Automatic execution is paused and stays paused: `%s auto resume`." % NAME
+        if not args.yes:
+            emit(args, {"enabled": False, "preview": text},
+                 text + "\n\nNothing changed yet. Enable it with: %s auto enable --yes%s%s"
+                 % (NAME, " --worktree" if args.worktree else "",
+                    " --no-budget" if args.no_budget else
+                    " --budget %g" % budget if args.budget is not None else ""))
+            return 0
+        autoqueue.enable(q, budget, worktree=args.worktree)
+        result = autoqueue.ensure_runner(q, None)
+        lines = [text, "", "Auto Queue is on for %s." % q.root]
+        if result["message"]:
+            lines.append(result["message"])
+        emit(args, {"enabled": True, "start": result}, "\n".join(lines))
+        return 0
+    if action == "disable":
+        autoqueue.disable(q)
+        emit(args, {"enabled": False}, "Auto Queue is off for %s. Queued tasks are kept; a "
+             "runner that is working finishes as usual (`%s auto stop` stops it after its "
+             "current task)." % (q.root, NAME))
+        return 0
+    if action == "pause":
+        autoqueue.pause(q)
+        info = engine.lock_info(q)
+        emit(args, {"paused": True}, "Paused. No new task starts until `%s auto resume`%s."
+             % (NAME, "; task #%s finishes first" % info["current_task_id"]
+                if info and info["alive"] and info["current_task_id"] else ""))
+        return 0
+    if action in ("resume", "start"):
+        if action == "resume":
+            autoqueue.resume(q)
+        result = autoqueue.ensure_runner(q, None)
+        text = "Resumed." if action == "resume" else ""
+        if result["state"] == "manual":
+            text += " Auto Queue is off for this project; `%s launch` starts a runner." % NAME
+        elif result["message"]:
+            text += " " + result["message"]
+        emit(args, {"start": result}, text.strip() or "Nothing to start.")
+        return 0
+    if action == "stop":
+        if args.now:
+            if not args.yes:
+                raise QueueError("`auto stop --now` stops the running task immediately; it is held "
+                                 "for review afterwards and automatic execution is paused. Add "
+                                 "--yes to confirm.")
+            result = autoqueue.stop_now(q)
+            if not result["stopped"]:
+                emit(args, result, "No runner holds this project.")
+                return 0
+            held = [item for item in result["recovered"] if item["task_id"]]
+            emit(args, result, "Stopped. Automatic execution is paused.%s Uncommitted changes "
+                 "were left as they are; `%s reconcile` shows them, `%s auto resume` continues."
+                 % ("".join(" Task #%s: %s." % (item["task_id"], item["status"]) for item in held),
+                    NAME, NAME))
+            return 0
+        info = autoqueue.stop_after_current(q)
+        if info is None:
+            emit(args, {"stopping": False}, "No runner is working on this project.")
+            return 0
+        emit(args, {"stopping": True, "runner": info},
+             "The runner stops after %s. Queued tasks stay pending%s."
+             % ("task #%s" % info["current_task_id"] if info["current_task_id"]
+                else "its current step",
+                "; with Auto Queue on, the next queued task starts a runner again (`%s auto "
+                "pause` prevents that)" % NAME if config["auto_queue_enabled"] else ""))
+        return 0
+    if action == "budget":
+        path = util.project_config_path(q.dir)
+        if args.set is not None:
+            current = util.load_json(path, {}) or {}
+            current["auto_queue_budget_usd"] = util.coerce_config_value("auto_queue_budget_usd",
+                                                                        args.set)
+            util.save_json_atomic(path, current)
+            config = util.effective_config(q.dir)
+        if args.renew or args.set is not None:
+            autoqueue.renew_allowance(q, "renew" if args.renew else "set")
+        spent = autoqueue.allowance(q, config)
+        if spent is None:
+            emit(args, None, "No allowance is set for automatic runs (`%s auto budget --set USD`)."
+                 % NAME)
+            return 0
+        emit(args, spent, "Allowance for automatic runs: $%.4f of $%.2f reported since %s "
+             "(remaining $%.4f)%s." % (spent["spent_usd"], spent["limit_usd"],
+                                      util.local_time(spent["since"]), spent["remaining_usd"],
+                                      "; %d run(s) reported no cost and are not counted"
+                                      % spent["unknown_runs"] if spent["unknown_runs"] else ""))
+        if args.renew or args.set is not None:
+            autoqueue.ensure_runner(q, None)
+        return 0
+    raise QueueError("unknown action %s" % action)
+
+
+def _queue_fingerprint(q):
+    """Changes when tasks are added, updated or released from a hold."""
+    row = q.conn.execute("SELECT COUNT(*) AS n, MAX(updated_at) AS at FROM tasks").fetchone()
+    held = q.conn.execute("SELECT COUNT(*) AS n FROM task_routing "
+                          "WHERE blocked_reason IS NOT NULL").fetchone()
+    return (row["n"], row["at"], held["n"])
+
+
 def cmd_run(q, args):
     _refuse_inside_worker("running the queue")
     if args.dry_run:
         return cmd_plan(q, args)
     return pyrunner.run(q, options_from_args(args), max_tasks=args.max_tasks, watch=args.watch,
                         poll_seconds=args.poll_seconds, stop_on_failure=args.stop_on_failure,
-                        force=args.force, quiet=args.quiet)
+                        force=args.force, quiet=args.quiet, idle_timeout=args.idle_timeout,
+                        auto=args.auto)
 
 
 def cmd_launch(q, args):
@@ -1604,6 +1777,24 @@ def build_parser():
                    help="plan with opus, then implement with the routed model")
     p.add_argument("--source", default="cli", help=argparse.SUPPRESS)
     p.add_argument("--session-id", help=argparse.SUPPRESS)
+    p.add_argument("--request-id", metavar="ID",
+                   help="a submission with an id already used is not saved again")
+    p.add_argument("--no-auto", action="store_true",
+                   help="do not start a runner even when Auto Queue is on")
+    p = command("auto", "Auto Queue for this project: start a runner when a task is saved")
+    p.add_argument("action", nargs="?", default="status",
+                   choices=["status", "enable", "disable", "pause", "resume", "stop", "start",
+                            "blockers", "budget"])
+    p.add_argument("--yes", action="store_true", help="confirm enable or stop --now")
+    p.add_argument("--budget", type=float, metavar="USD",
+                   help="enable: allowance for automatic runs (default 5)")
+    p.add_argument("--no-budget", action="store_true", help="enable: no allowance")
+    p.add_argument("--worktree", action="store_true",
+                   help="enable: run tasks in a separate git worktree")
+    p.add_argument("--now", action="store_true",
+                   help="stop: stop the running task immediately (held for review)")
+    p.add_argument("--set", metavar="USD", help="budget: set the allowance and count from now")
+    p.add_argument("--renew", action="store_true", help="budget: count the allowance from now")
 
     p = command("status", "summary of the queue, the runner and the open tasks")
     p = command("list", "list tasks")
@@ -1689,6 +1880,9 @@ def build_parser():
                        help="stop the runner as soon as a task attempt fails")
         p.add_argument("--force", action="store_true",
                        help="take over the lock even if another runner looks alive")
+        p.add_argument("--idle-timeout", type=int, default=0, metavar="SECONDS",
+                       help="with --watch: exit after this long without a task")
+        p.add_argument("--auto", action="store_true", help=argparse.SUPPRESS)
 
     p = command("run", "run queued tasks one after another in this terminal (portable runner)")
     runner_options(p)
@@ -1857,7 +2051,7 @@ QUEUE_COMMANDS = {
     "plan": cmd_plan, "recover": cmd_recover, "where": cmd_where, "usage": cmd_usage,
     "reconcile": cmd_reconcile, "project": cmd_project, "workflow": cmd_workflow,
     "replica": cmd_replica, "bid": cmd_bid, "agents": cmd_agents,
-    "challenge": cmd_challenge,
+    "challenge": cmd_challenge, "auto": cmd_auto,
     "runner-acquire": cmd_runner_acquire, "claim": cmd_claim, "heartbeat": cmd_heartbeat,
     "finish": cmd_finish, "runner-release": cmd_runner_release,
 }
@@ -1866,6 +2060,9 @@ GLOBAL_COMMANDS = {"projects": cmd_projects, "config": cmd_config, "migrate": cm
                    "update": cmd_update, "doctor": cmd_doctor, "backup": cmd_backup,
                    "restore": cmd_restore, "changelog": cmd_changelog}
 PROTOCOL_COMMANDS = ("runner-acquire", "claim", "heartbeat", "finish", "runner-release")
+# Commands that can make a task runnable; with Auto Queue on, a runner is started after them.
+NUDGE_COMMANDS = ("retry", "priority", "depend", "model", "workflow", "challenge", "project",
+                  "agents", "bid", "replica")
 RUNNER_STEP_COMMANDS = ("claim", "heartbeat", "finish", "runner-release")
 
 
@@ -1896,7 +2093,15 @@ def main(argv=None):
         q = store.Queue(root)
         q.start = start
         try:
-            return QUEUE_COMMANDS[args.command](q, args)
+            before = _queue_fingerprint(q) if args.command in NUDGE_COMMANDS else None
+            code = QUEUE_COMMANDS[args.command](q, args)
+            if code == 0 and before is not None and _queue_fingerprint(q) != before:
+                # The command made work runnable (approval, decision, retry, new tasks):
+                # with Auto Queue on, make sure a runner picks it up.
+                result = autoqueue.ensure_runner(q)
+                if result["state"] in ("started", "failed") and not args.json:
+                    print("Auto Queue: %s" % result["message"])
+            return code
         finally:
             q.close()
             if track_version:

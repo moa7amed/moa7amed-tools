@@ -15,6 +15,7 @@ _IN_PROGRESS = ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "BISECT_LOG",
 def git(cwd, *args, **kwargs):
     """Run git; returns (returncode, stdout, stderr) and never raises for a git failure."""
     stdin_text = kwargs.pop("input", None)
+    limit = kwargs.pop("timeout", 300)
     env = dict(os.environ)
     env["GIT_TERMINAL_PROMPT"] = "0"
     env.pop("GIT_DIR", None)
@@ -24,7 +25,7 @@ def git(cwd, *args, **kwargs):
             ["git", "-c", "core.quotepath=false"] + list(args), cwd=cwd, env=env,
             input=stdin_text.encode("utf-8") if stdin_text is not None else None,
             stdin=None if stdin_text is not None else subprocess.DEVNULL,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=limit,
             **util.no_window_kwargs())
     except FileNotFoundError:
         return 127, "", "git is not installed or not on PATH"
@@ -61,10 +62,11 @@ def branch(cwd):
     return out if code == 0 and out else None
 
 
-def status_lines(cwd, every_file=False):
+def status_lines(cwd, every_file=False, timeout=300):
     """Uncommitted changes, tracked and untracked (ignored files are not listed). With
     `every_file`, a new folder is listed file by file instead of as the folder."""
-    code, out, err = git(cwd, "status", "--porcelain", *(["-uall"] if every_file else []))
+    code, out, err = git(cwd, "status", "--porcelain", *(["-uall"] if every_file else []),
+                         timeout=timeout)
     if code != 0:
         raise util.QueueError("git status failed in %s: %s" % (cwd, err))
     return [line for line in out.splitlines() if line.strip()]

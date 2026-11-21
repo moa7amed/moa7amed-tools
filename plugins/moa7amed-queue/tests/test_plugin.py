@@ -18,7 +18,7 @@ SKILLS = ("queue-add", "queue-run", "queue-status", "queue-retry", "queue-priori
           "replica-flows", "replica-design", "replica-backend", "replica-plan", "replica-build",
           "replica-compare", "replica-test", "replica-status", "bidstudio", "bid-analyze",
           "bid-compliance", "bid-clarifications", "bid-technical", "bid-estimation", "bid-pricing",
-          "bid-commercial", "bid-review", "bid-status", "grillme")
+          "bid-commercial", "bid-review", "bid-status", "grillme", "auto")
 OLD_BRAND = re.compile(r"claude-task-queue|Claude Task Queue|\bctq\b|\bCTQ_", re.IGNORECASE)
 
 
@@ -121,11 +121,17 @@ class PluginPackage(unittest.TestCase):
         self.assertEqual(sorted(always_on), sorted(["model-auto", "plan-status", "queue-add",
                                              "queue-priority", "queue-retry", "queue-status",
                                              "replica", "replica-status", "bidstudio",
-                                             "bid-status"]))
+                                             "bid-status", "auto"]))
         # 611 characters before Replica (0.5.0); Replica and BidStudio add about 200 each.
         self.assertLessEqual(sum(len(text) for text in always_on.values()), 1050)
         # One hook, and it starts no interpreter unless a prompt is being captured.
         self.assertEqual(list(load("hooks", "hooks.json")["hooks"]), ["UserPromptSubmit"])
+        # A capture hook that runs out of time must not hand the prompt to Claude as well:
+        # Claude Code (2.1.295 and later) then blocks the prompt instead (verified live with
+        # 2.1.329: without it the queued request was also answered by the session).
+        entry = load("hooks", "hooks.json")["hooks"]["UserPromptSubmit"][0]["hooks"][0]
+        self.assertEqual(entry.get("onFailure"), "block")
+        self.assertEqual(entry.get("timeout"), 30)
         self.assertFalse(os.path.exists(os.path.join(ROOT, ".mcp.json")))
         self.assertFalse(os.path.isdir(os.path.join(ROOT, "agents")))
 

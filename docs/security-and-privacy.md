@@ -111,6 +111,25 @@ too. A prompt that clearly states a decision is stored in the project's queue da
 prompt still reaches Claude unchanged. Every other prompt is passed on and not stored.
 When no decision is open, nothing changes from the paragraph above.
 
+### Auto Queue
+
+Off for every project until the owner turns it on for that project (`auto enable`, which
+first shows what it means; the setting is ignored in the global settings file). When it is
+on, the capture hook starts the ordinary runner after the task is saved. The runner keeps
+the configured permissions; nothing is widened, no global Claude Code setting is changed
+and no service or startup entry is installed. A runner started from a Claude Code session
+does not inherit that session's identifiers (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, its
+messaging socket and token, ...); provider and configuration variables are kept. A queued
+task cannot turn Auto Queue on. `auto stop --now` stops only the processes the runner lock
+recorded (process id plus start time, on this host). See [auto-queue.md](auto-queue.md).
+
+The capture hook is registered with `onFailure: "block"`: if it fails or runs out of time,
+Claude Code blocks the prompt rather than sending it to Claude (Claude Code 2.1.295 and
+later). Ordinary prompts are decided by the shell script without starting Python. When a
+`queue:` prompt is refused because it repeats or extends text already saved, the submitted
+text is kept in the project's queue database as an `intake-refused` event, so the owner can
+see later what was not saved.
+
 ### Decisions on concerns
 
 Only the owner's answer counts. A decision command is refused inside a queued task or an

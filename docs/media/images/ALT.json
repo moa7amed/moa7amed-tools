@@ -10,5 +10,6 @@
  "approval": "Terminal: task 3's plan waits for approval, the owner approves it, and the next run implements it.",
  "verification": "Terminal: task 3's record with its result, model and agents; the git log with one commit per task; the project's tests passing; the usage report.",
  "recovery": "Terminal: a runner is killed while a task runs; status reports the stale lock; the next run recovers the interrupted task and finishes it; the history shows both attempts.",
- "bid-and-replica": "Terminal: a BidStudio project is created and a synthetic tender document recorded; a Replica project is created from the team's own HTML prototype; both report their status."
+ "bid-and-replica": "Terminal: a BidStudio project is created and a synthetic tender document recorded; a Replica project is created from the team's own HTML prototype; both report their status.",
+ "auto-queue": "Real output from an interactive Claude Code session: three queue: prompts are saved as tasks 1 to 3 (the first starts a runner, the others wait behind task 1, and the restored text of task 2 is not saved again); then moa7amed-queue auto, status and history show the four tasks done one after another, the runner stopping when idle and starting again for a later task."
 }

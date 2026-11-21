@@ -16,7 +16,7 @@ import os
 import re
 import uuid
 
-from . import gitops, models, routing, util
+from . import autoqueue, gitops, models, routing, util
 from .util import QueueError
 
 EXIT_LOCK_HELD = 2
@@ -103,7 +103,7 @@ def _completed_output(run):
     return parsed if parsed and parsed.get("complete") else None
 
 
-def _recover_open_runs(q, force, reason):
+def _recover_open_runs(q, force, reason, hold=False):
     """Deal with runs that were never closed because their runner died.
 
     Returns (recovered, to_reconcile). A run whose Claude process had already written its
@@ -128,13 +128,15 @@ def _recover_open_runs(q, force, reason):
         # A task cut off part-way may already have done things outside the repository
         # (sent a message, called an API, deployed). With on_interrupted=hold it waits for
         # a person instead of being run again by itself.
-        held = not exhausted and util.effective_config(q.dir).get("on_interrupted") == "hold"
+        held = not exhausted and (hold or util.effective_config(q.dir).get("on_interrupted")
+                                  == "hold")
         stamp = util.now_iso()
         error = reason
         if held:
-            error = ("%s. Held for review (on_interrupted=hold): it may have done part of its "
-                     "work. `moa7amed-queue reconcile` shows what it left; `moa7amed-queue retry "
-                     "%d` runs it again." % (reason, task["id"]))
+            error = ("%s. Held for review (%s): it may have done part of its work. "
+                     "`moa7amed-queue reconcile` shows what it left; `moa7amed-queue retry %d` "
+                     "runs it again." % (reason, "stopped on request" if hold
+                                         else "on_interrupted=hold", task["id"]))
         q.conn.execute("UPDATE runs SET finished_at=?, outcome='interrupted', error=? WHERE id=?",
                        (stamp, reason, run["id"]))
         q.conn.execute(
@@ -190,7 +192,7 @@ def _clean_options(options):
     return clean
 
 
-def acquire(q, pid, options=None, kind="python", force=False):
+def acquire(q, pid, options=None, kind="python", force=False, hold=False, reason=None):
     """Take the runner lock for this project, cleaning up after a crashed runner."""
     clean = _clean_options(options)
     config = util.effective_config(q.dir, clean)
@@ -206,7 +208,7 @@ def acquire(q, pid, options=None, kind="python", force=False):
                         % (row["runner_id"], row["pid"], row["host"],
                            "forced" if force else "stale"))
         recovered, to_reconcile = _recover_open_runs(
-            q, force, "the runner stopped before the task finished")
+            q, force, reason or "the runner stopped before the task finished", hold=hold)
         runner_id = uuid.uuid4().hex[:12]
         stamp = util.now_iso()
         q.conn.execute(
@@ -215,6 +217,8 @@ def acquire(q, pid, options=None, kind="python", force=False):
             (runner_id, int(pid), util.HOST, kind, stamp, stamp, json.dumps(clean)))
         _remember_process(q, "runner", runner_id, pid)
         q.log_event(None, None, "runner-start", "runner %s (%s, pid %s)" % (runner_id, kind, pid))
+        if kind == autoqueue.RUNNER_KIND:
+            autoqueue.runner_acquired(q, pid)
     # With the lock held, close the runs that had in fact finished (git is involved, so
     # this happens outside the database transaction above).
     recovered += _reconcile(q, runner_id, to_reconcile)
@@ -271,9 +275,21 @@ def release(q, runner_id):
                         "the runner exited during the task; pending again")
         q.conn.execute("DELETE FROM runner_lock WHERE id=1")
         q.conn.execute("DELETE FROM process_tokens WHERE kind='runner'")
+        autoqueue.clear_stop(q, runner_id)
         q.log_event(None, None, "runner-stop",
                     "runner %s ran %d task(s)" % (runner_id, row["tasks_run"]))
     return {"released": True}
+
+
+def release_if_idle(q, runner_id):
+    """Give the lock back only if nothing is runnable, in one transaction. A task saved at
+    this moment is then either seen here (and the runner goes on) or saved after the lock is
+    gone (and its submission starts a runner). Returns True when the lock was released."""
+    with q.tx():
+        if q.next_eligible() is not None:
+            return False
+        release(q, runner_id)
+    return True
 
 
 def session_cost(q, lock):
@@ -424,12 +440,14 @@ def _commit_of_run(cwd, run, task, head_after):
     return found
 
 
-def recover(q, force=False):
+def recover(q, force=False, hold=False, reason=None):
     """Manual recovery: drop a stale lock, requeue interrupted tasks and record tasks that
-    had in fact finished. It does what a starting runner does, then lets go again."""
+    had in fact finished. It does what a starting runner does, then lets go again. With
+    `hold`, an interrupted task waits for review instead of going back in line."""
     row = lock_row(q)
     try:
-        acquired = acquire(q, os.getpid(), None, kind="recover", force=force)
+        acquired = acquire(q, os.getpid(), None, kind="recover", force=force, hold=hold,
+                           reason=reason)
     except LockHeld as exc:
         raise LockHeld("%s Use --force only if you are sure it is gone." % exc, info=exc.info)
     release(q, acquired["runner_id"])
@@ -858,6 +876,14 @@ def claim(q, runner_id):
                                  "result has to be reported before another task can start"
                                  % (lock["current_run_id"], unfinished["task_id"]))
         opts = runner_options(q, lock)
+        if autoqueue.stop_requested(q, runner_id):
+            return {"action": "stop", "reason": "stop-requested", "exit_code": 0,
+                    "message": "stopping after the current task, as requested "
+                               "(`moa7amed-queue auto stop`)"}
+        if autoqueue.paused(q):
+            return {"action": "idle", "reason": "paused", "pending": q.counts()["pending"],
+                    "wait_seconds": 0, "message": "execution is paused; no new task is "
+                    "started (`moa7amed-queue auto resume`)"}
         from . import challenge
         challenge.release_when_off(q, opts)
         task = q.next_eligible()
@@ -886,6 +912,28 @@ def claim(q, runner_id):
             opts = dict(opts)
             opts["max_budget_usd"] = round(min(per_task, remaining) if per_task else remaining, 4)
             opts["_budget_from_session"] = not per_task or remaining < per_task
+        if lock["kind"] == autoqueue.RUNNER_KIND:
+            spent = autoqueue.allowance(q, opts)
+            if spent is not None:
+                if spent["exhausted"]:
+                    message = ("the automatic-execution allowance of $%.2f is used up: Claude "
+                               "Code reported $%.4f since it was granted. %d task(s) stay pending "
+                               "and nothing was interrupted; renew it with `moa7amed-queue auto "
+                               "budget --renew`.%s" % (spent["limit_usd"], spent["spent_usd"],
+                                                       q.counts()["pending"],
+                                                       " %d run(s) reported no cost; their usage "
+                                                       "is unknown, not zero." % spent["unknown_runs"]
+                                                       if spent["unknown_runs"] else ""))
+                    with q.tx():
+                        q.log_event(None, None, "cost-limit", message)
+                    return {"action": "stop", "reason": "auto-allowance", "message": message,
+                            "exit_code": EXIT_COST_LIMIT, "spent_usd": spent["spent_usd"],
+                            "task_id": task["id"]}
+                per_task = opts.get("max_budget_usd")
+                if not per_task or spent["remaining_usd"] < per_task:
+                    opts = dict(opts)
+                    opts["max_budget_usd"] = round(spent["remaining_usd"], 4)
+                    opts["_budget_from_allowance"] = True
         # The model is chosen here, before the task starts, and stays with this run.
         route = routing.select_for_run(q, task, opts)
         if route["action"] == "blocked":
@@ -973,8 +1021,10 @@ def claim(q, runner_id):
             "model_source": route["source"], "model_reason": route["reason"],
             "phase": route["phase"], "model_note": _model_note(route),
             "budget_usd": opts.get("max_budget_usd") or None,
-            "budget_note": (" [budget $%g: what is left of cost_limit_run_usd]"
-                            % opts["max_budget_usd"]) if opts.get("_budget_from_session")
+            "budget_note": (" [budget $%g: what is left of the automatic allowance]"
+                            % opts["max_budget_usd"]) if opts.get("_budget_from_allowance")
+                           else (" [budget $%g: what is left of cost_limit_run_usd]"
+                                 % opts["max_budget_usd"]) if opts.get("_budget_from_session")
                            else "",
             "timeout_seconds": int(float(opts["timeout_minutes"]) * 60),
             "env": task_environment(task["id"], q.root),

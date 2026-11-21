@@ -63,6 +63,7 @@ What you get:
 - [Adaptive engineering workflow](#adaptive-engineering-workflow)
 - [Multi-agent execution](#multi-agent-execution-stage-a)
 - [Challenge, discuss, then execute](#challenge-discuss-then-execute)
+- [Auto Queue](#auto-queue)
 - [Automatic model routing](#automatic-model-routing)
 - [Project planning](#project-planning)
 - [Replica: rebuilding an application](#replica-rebuilding-an-application)
@@ -180,18 +181,37 @@ updated: they follow the copy Claude Code is using.
 
 ## Quick start
 
-Inside Claude Code, in your project:
+Install once → enable per project → submit with `queue:` → automatic execution.
+
+Installing the plugin makes the commands available everywhere; it executes nothing by
+itself. In Claude Code, in a project you trust, turn on Auto Queue once:
+
+```text
+/moa7amed-queue:auto enable
+```
+
+It shows what that means for this project (folder, permissions, cost allowance, how to
+pause) and asks before changing anything. From then on, in that project:
 
 ```text
 queue: Add input validation to the signup form. Acceptance criteria: empty email is rejected with a message.
 queue: Update the README to describe the new validation.
-/moa7amed-queue:queue-status
-/moa7amed-queue:queue-run
 ```
 
-The two `queue:` prompts are stored and never reach Claude. `queue-run` opens the runner,
-which executes task 1, commits it, executes task 2, commits it, and stops. Each task runs
-on the model chosen for it: here Sonnet for the validation work and Haiku for the README.
+Each `queue:` prompt is saved as a task and never reaches Claude, so the current turn is
+not interrupted. Claude Code puts the prompt back into the input box: press Esc twice before
+typing the next one. The first one starts a runner in the background (`Task #1 saved. Runner
+started.`), the second waits behind it (`Task #2 saved. Waiting behind task #1.`). The
+runner executes task 1, verifies and commits it, then task 2, each on the model chosen for
+it (here Sonnet for the validation work and Haiku for the README), and exits after a few
+minutes without work. `/moa7amed-queue:queue-status` shows progress. See
+[Auto Queue](../../docs/auto-queue.md).
+
+Without Auto Queue (the default), tasks wait until you start a runner:
+
+```text
+/moa7amed-queue:queue-run
+```
 
 ## Adding tasks
 
@@ -450,6 +470,33 @@ moa7amed-queue agents evaluate 12   # how it would run (changes nothing)
 
 Guide, enforcement boundary, recovery and settings:
 [Multi-agent execution](../../docs/agents.md).
+
+## Auto Queue
+
+Off by default and per project. `moa7amed-queue auto enable` (or `/moa7amed-queue:auto
+enable`) shows what it means for this project and changes nothing; `--yes` turns it on.
+Then every explicit submission (`queue:`, `/moa7amed-queue:queue-add`, `moa7amed-queue
+add`) is saved in the queue database first, and only then is a runner started in the
+background if none is working. Ordinary messages are never captured. After a `queue:`
+prompt, press Esc twice to clear the input box (Claude Code restores the prompt there); the
+prompt hook is bounded well within Claude Code's 30 s limit and blocks the prompt if it
+fails or runs out of time (`onFailure: block`, Claude Code 2.1.295 and later), so a request is
+not sent to Claude as well. `moa7amed-queue add` in a terminal needs no prompt hook.
+
+| In Claude Code | Command line | What it does |
+| :-- | :-- | :-- |
+| `/moa7amed-queue:auto` | `moa7amed-queue auto` | State, runner, allowance, blockers. |
+| `/moa7amed-queue:auto enable` | `moa7amed-queue auto enable [--yes] [--worktree] [--budget USD \| --no-budget]` | Turn it on for this project (after showing what it means). |
+| `/moa7amed-queue:auto pause` | `moa7amed-queue auto pause` / `resume` | Stop claiming new tasks (the running one finishes) / go on. |
+| `/moa7amed-queue:auto stop` | `moa7amed-queue auto stop` | The runner exits after its current task. |
+| | `moa7amed-queue auto stop --now --yes` | Stop the running task now; it is held for review and automatic execution paused. |
+| `/moa7amed-queue:auto disable` | `moa7amed-queue auto disable` | No more automatic starts; tasks are kept. |
+| | `moa7amed-queue auto budget [--renew \| --set USD]` | The allowance for automatic runs. |
+
+One runner per project (the existing lock), an idle timeout after which it exits, an
+allowance for automatic runs that does not restart with each runner, and every approval,
+decision, dependency, verification and cost rule unchanged. Full guide:
+[docs/auto-queue.md](../../docs/auto-queue.md).
 
 ## Challenge, discuss, then execute
 
@@ -1203,6 +1250,10 @@ global settings.
 | `max_budget_usd` | none | `claude --max-budget-usd`, per task. |
 | `cost_warn_task_usd`, `cost_warn_run_usd` | none | Log a warning when a task, or a runner session, has cost this much. See [Cost](#cost). |
 | `cost_limit_run_usd` | none | Start no further task once a runner session has cost this much. |
+| `auto_queue_enabled` | `false` | Auto Queue: start a runner when a task is saved. Project settings only (`auto enable`). |
+| `auto_queue_idle_timeout_seconds` | `300` | An automatic runner exits after this long without a task. |
+| `auto_queue_launch_retry_limit` | `3` | Failed automatic starts in a row before automatic starting stops. |
+| `auto_queue_budget_usd` | unset (5 when enabled) | Allowance for automatic runs, counted across runner restarts; 0 = none. |
 | `claude_args` | none | Extra arguments for every `claude` call. |
 | `claude_bin` | `claude` | Executable to run (also `MOA7AMED_QUEUE_CLAUDE_BIN`). |
 | `timeout_minutes` | `60` | Per-task time limit; `0` disables it. |
@@ -1241,7 +1292,10 @@ When both names are set, the new one wins. Tasks started by the runner see
 ```text
 moa7amed-queue add [TEXT...] [--stdin | --prompt-file F] [--acceptance T | --acceptance-file F]
                    [--priority P] [--after IDS] [--max-attempts N] [--title T]
-                   [--model opus|sonnet|haiku|NAME] [--phased]
+                   [--model opus|sonnet|haiku|NAME] [--phased] [--request-id ID] [--no-auto]
+moa7amed-queue auto [status|enable|disable|pause|resume|stop|start|blockers|budget] [--yes]
+                    [--worktree] [--budget USD|--no-budget] [--now] [--renew] [--set USD]
+                                             Auto Queue for this project (see docs/auto-queue.md)
 moa7amed-queue status | list [--status S] | show ID | history [ID] | log [ID]
 moa7amed-queue priority ID... LEVEL
 moa7amed-queue depend ID --on IDS | --remove IDS
@@ -1638,6 +1692,13 @@ To offer the plugin to a whole team automatically, add the marketplace to a repo
 
 ## Limitations
 
+- **Auto Queue captures only explicit submissions** (`queue:`, queue-add, `add`); ordinary
+  messages are not captured. After a `queue:` prompt, clear the restored text with Esc twice.
+  Claude Code before 2.1.295 does not know `onFailure`, so there a prompt hook that runs out
+  of time can let the prompt through. An automatic runner is a process of your user session:
+  it ends with a shutdown or log-off and starts again with the next submission or
+  `moa7amed-queue auto start`. It continued after `/exit` of the session that started it
+  (Windows 11, Claude Code 2.1.329); other platforms were not tested with a real session.
 - **`queue:` during a running turn** works as described in
   [While Claude is in the middle of a turn](#while-claude-is-in-the-middle-of-a-turn)
   with Claude Code 2.1.329 on Windows. It relies on behaviour Claude Code does not

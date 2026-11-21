@@ -1,6 +1,6 @@
 """moa7amed-queue core library (standard library only, Python 3.8+)."""
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 
 NAME = "moa7amed-queue"
 PUBLISHER = "moa7amed"

@@ -13,6 +13,11 @@ import os
 import sys
 
 DEFAULT_PREFIX = "queue:"
+# Claude Code gives a UserPromptSubmit hook 30 s; a hook that has not answered by then is
+# cancelled and the prompt goes on to Claude. Everything the hook does is bounded well below
+# that: the database wait, the workspace check, and starting a runner.
+DB_WAIT_SECONDS = 8
+START_WAIT_SECONDS = 12
 
 
 def _env(name):
@@ -77,9 +82,8 @@ REPEAT_WINDOW_HOURS = 12
 def _repeat_of_earlier_capture(q, session_id, body):
     """Claude Code puts a prompt the hook blocked back into the input box (observed with
     Claude Code 2.1.329, whether Claude was busy or idle). Pressing Enter again, or typing
-    more and pressing Enter, would queue the same request a second time. A prompt from the
-    same session that repeats, or extends, a recent capture is therefore not queued; the
-    reason says why and what to do. Returns that reason, or None to queue normally."""
+    more after it, sends that text again. Returns None when `body` does not start with a
+    recent capture of this session, else {"kind": "same" | "extends", "task_id", "added"}."""
     if not session_id:
         return None
     from . import util
@@ -91,20 +95,49 @@ def _repeat_of_earlier_capture(q, session_id, body):
     for row in rows:
         earlier = row["prompt"]
         if body == earlier:
-            return ("NOT queued again: this is the same text as task #%d, which was already "
-                    "queued from this session. Claude Code leaves a captured prompt in the "
-                    "input box; press Esc twice to clear it before typing your next message. "
-                    "To queue the same work twice on purpose, use `moa7amed-queue add`."
-                    % row["id"])
+            return {"kind": "same", "task_id": row["id"], "added": ""}
         if body.startswith(earlier) and len(body) > len(earlier):
-            added = body[len(earlier):].strip()
-            return ("NOT queued: this starts with the text of task #%d (already queued; Claude "
-                    "Code left it in the input box) followed by new text: \"%s\". Nothing was "
-                    "saved, so nothing is queued twice. Press Esc twice to clear the input box, "
-                    "then submit the new part on its own: with `queue:` in front to queue it, "
-                    "or without it to send it to Claude."
-                    % (row["id"], added[:200] + ("..." if len(added) > 200 else "")))
+            return {"kind": "extends", "task_id": row["id"], "added": body[len(earlier):].strip()}
     return None
+
+
+def _without_restored_text(q, session_id, body, prefix):
+    """Separate a new request from text Claude Code restored into the input box.
+
+    Returns (body to save or None, refusal reason or None, ids of tasks whose restored text
+    was left out). The restored text of a saved task is never saved again. What follows it
+    is saved only when it starts with the capture prefix itself, the explicit sign of a new
+    request; anything else may be a change to that task or a message for Claude, so nothing
+    is saved and nothing is sent, and the owner is told what happened."""
+    left_out = []
+    while True:
+        found = _repeat_of_earlier_capture(q, session_id, body)
+        if found is None:
+            return body, None, left_out
+        added = found["added"]
+        if found["kind"] == "extends" and prefix and added.lower().startswith(prefix.lower()):
+            left_out.append(found["task_id"])
+            body = added[len(prefix):].strip()
+            if not body:
+                return None, ("NOT queued: nothing followed the second '%s' (the text before it "
+                              "is task #%d, already saved). Press Esc twice to clear the input "
+                              "box." % (prefix, found["task_id"])), left_out
+            continue
+        if found["kind"] == "same":
+            return None, ("NOT queued again: this is the same text as task #%d, which was "
+                          "already queued from this session. Claude Code leaves a captured "
+                          "prompt in the input box; press Esc twice to clear it before typing "
+                          "your next message. To queue the same work twice on purpose, use "
+                          "`moa7amed-queue add`." % found["task_id"]), left_out
+        shown = added[:200] + ("..." if len(added) > 200 else "")
+        return None, ("NOT queued and NOT sent to Claude: this starts with the text of task #%d "
+                      "(already saved; Claude Code left it in the input box), followed by more "
+                      "text that does not start with '%s': \"%s\". That could be a change to "
+                      "task #%d, a new task or a message for Claude, so nothing was saved and "
+                      "nothing ran. Press Esc twice to clear the input box, then submit the new "
+                      "part on its own: with '%s' in front to queue it, or without it to send "
+                      "it to Claude. The text is kept in `moa7amed-queue history`."
+                      % (found["task_id"], prefix, shown, found["task_id"], prefix)), left_out
 
 
 def _replica_intake(q, body):
@@ -156,6 +189,51 @@ def _bid_intake(q, body):
     return bid_store.create(q, bid_store.next_id(q), body), None
 
 
+def _start_if_auto(q, task_id):
+    """With Auto Queue on for this project, make sure a runner works on it. Returns the short
+    status for the message, or None when the project uses the manual workflow. A failure here
+    never costs the saved task."""
+    import threading
+    from . import autoqueue, util
+    try:
+        config = util.effective_config(q.dir)
+        if not autoqueue.enabled(config):
+            return None
+    except Exception as exc:  # noqa: BLE001
+        return "Automatic start failed: %s. Start the runner with /moa7amed-queue:queue-run." % exc
+    outcome = {}
+
+    def start():
+        # Its own connection: the thread may outlive the hook's answer.
+        from . import store
+        try:
+            own = store.Queue(q.root, timeout=DB_WAIT_SECONDS)
+            try:
+                outcome["result"] = autoqueue.ensure_runner(own, config, task_id)
+            finally:
+                own.close()
+        except Exception as exc:  # noqa: BLE001 - the task is saved; say what went wrong
+            outcome["error"] = exc
+
+    worker = threading.Thread(target=start, daemon=True)
+    worker.start()
+    worker.join(START_WAIT_SECONDS)
+    if worker.is_alive():
+        return ("Starting a runner did not finish within %d s; it may still start. "
+                "`moa7amed-queue auto` shows the state." % START_WAIT_SECONDS)
+    if "error" in outcome:
+        return ("Automatic start failed: %s. Start the runner with /moa7amed-queue:queue-run."
+                % outcome["error"])
+    return outcome["result"]["message"] or "Saved."
+
+
+def _left_out_note(left_out):
+    if not left_out:
+        return ""
+    return (" The text of task %s that Claude Code had left in the input box was not saved "
+            "again." % ", ".join("#%d" % task_id for task_id in left_out))
+
+
 def owner_decision(payload, prompt):
     """A prompt the owner typed while a queued task waits for their decision on a concern.
     When it clearly decides (no special phrase needed) and it is clear which concerns it
@@ -172,7 +250,7 @@ def owner_decision(payload, prompt):
     try:
         project = (_env("PROJECT") or os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd"))
         root, _start = util.resolve_project(project)
-        q = store.Queue(root)
+        q = store.Queue(root, timeout=DB_WAIT_SECONDS)
     except Exception:  # noqa: BLE001 - an ordinary prompt must never fail because of this
         return 0
     try:
@@ -243,15 +321,23 @@ def main():
         project = (_env("PROJECT") or os.environ.get("CLAUDE_PROJECT_DIR")
                    or payload.get("cwd"))
         root, start = util.resolve_project(project)
-        try:   # as for every command: back the data up on the first run after an update
-            from . import maintenance
-            maintenance.note_version()
+        try:   # record the version; a backup after an update is left to the next command,
+            from . import maintenance   # which makes it before writing anything (bounded hook)
+            maintenance.note_version(backup=False)
         except Exception:
             pass
-        q = store.Queue(root)
+        q = store.Queue(root, timeout=DB_WAIT_SECONDS)
         replica_project = None
+        auto = None
         try:
-            repeat = _repeat_of_earlier_capture(q, payload.get("session_id"), body)
+            kept, repeat, left_out = _without_restored_text(q, payload.get("session_id"),
+                                                            body, prefix)
+            if repeat is not None:
+                with q.tx():   # the owner can see later what was not saved, and why
+                    q.log_event(None, None, "intake-refused",
+                                "%s | submitted text: %s" % (repeat.split(":")[0], body[:2000]))
+            else:
+                body = kept
             bid_project = None
             if repeat is None:
                 replica_project, repeat = _replica_intake(q, body)
@@ -261,9 +347,18 @@ def main():
                 # The task later runs in the directory the session was in when it was queued.
                 workdir = (util.relative_workdir(root, payload.get("cwd") or start)
                            or util.relative_workdir(root, start))
+                # Claude Code gives every prompt an id (prompt_id): the same submission seen
+                # twice is saved once. Without an id, nothing is deduplicated here.
+                prompt_id = payload.get("prompt_id")
                 task_id = q.add(body, source="hook", session_id=payload.get("session_id"),
-                                workdir=workdir)
-                pending = q.counts()["pending"]
+                                workdir=workdir,
+                                request_id="prompt:%s" % prompt_id if prompt_id else None)
+                if q.last_add_was_repeat:
+                    repeat = ("Already saved as task #%d (the same prompt was submitted twice); "
+                              "not saved again." % task_id)
+                else:
+                    pending = q.counts()["pending"]
+                    auto = _start_if_auto(q, task_id)   # the task is committed by now
         finally:
             q.close()
         if repeat is not None:
@@ -282,13 +377,18 @@ def main():
                       "architecture and a plan you approve; the building then runs in the "
                       "queue). Press Esc twice to clear the input box."
                       % (replica_project["id"], replica_project["mode"], replica_project["id"]))
+        elif auto is not None:
+            reason = ("Task #%d saved for %s. %s%s Not sent to Claude, so the current work is not "
+                      "interrupted. Claude Code leaves this text in the input box: press Esc "
+                      "twice to clear it. Progress: /moa7amed-queue:queue-status."
+                      % (task_id, os.path.basename(q.root), auto, _left_out_note(left_out)))
         else:
-            reason = ("Queued as task #%d for %s (%d pending). It was saved to the task queue "
+            reason = ("Queued as task #%d for %s (%d pending).%s It was saved to the task queue "
                       "and NOT sent to Claude, so the current work is not interrupted. Claude "
                       "Code leaves this text in the input box: press Esc twice to clear it "
                       "before your next message. Run the queue with /moa7amed-queue:queue-run "
                       "and inspect it with /moa7amed-queue:queue-status."
-                      % (task_id, os.path.basename(q.root), pending))
+                      % (task_id, os.path.basename(q.root), pending, _left_out_note(left_out)))
     except Exception as exc:  # a prompt the user asked to queue must not reach Claude
         reason = ("moa7amed-queue could NOT save this prompt (%s). It was not sent to "
                   "Claude either; your text is shown below so you can submit it again." % exc)

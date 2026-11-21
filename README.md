@@ -52,6 +52,7 @@ model its difficulty calls for, and commits each result.
 | **Replica** | Rebuild an application from a URL, screenshots, recordings, source or specifications: evidence-classified screen and feature inventory, a plan you approve, building in the queue, measured screenshot comparison, real browser tests, bounded correction rounds, clean-room rules for third-party references. See [docs/replica.md](docs/replica.md) |
 | **BidStudio** | Tender analysis and proposals: every requirement quoted from its document, compliance matrix with evidence, clarifications and addenda with history, bid/no-bid, effort estimate, deterministic pricing (markup, margin, contingency, FX, tax), technical and commercial proposals (DOCX, PDF) and workbooks (XLSX) in English or Arabic, independent review. Never submits. See [docs/bidstudio.md](docs/bidstudio.md) |
 | **Multi-agent analysis (stage A)** | When justified, read-only analysis agents run concurrently in separate Claude Code sessions (tool-restricted, on a snapshot of HEAD, shared budget); the task's own session stays the only writer and verifies. Most tasks stay single; parallel implementation writes are not implemented. See [docs/agents.md](docs/agents.md) |
+| **Auto Queue** | Opt-in per project: a saved task starts a runner in the background when none is working; it runs eligible tasks one at a time and exits when idle. Pause, stop and an allowance for automatic runs; approvals and limits unchanged. See [docs/auto-queue.md](docs/auto-queue.md) |
 | **Challenge, then execute** | A task with a concrete risk (credentials in code, security switched off, data deleted, history rewritten, production or publishing) can wait for your decision: the concern, its evidence and an alternative, once. You take the recommendation or proceed with your approach; the decision is stored and followed, and never lifts permissions, approvals or cost limits. `/moa7amed-queue:grillme` reviews on request. See [docs/challenge.md](docs/challenge.md) |
 | **Project planning** | For new systems and major changes: requirements with evidence, the real deployment environment, architecture options checked against it, decision records, your explicit approval, and the approved tasks executed by the queue with a compliance check after each one. See [docs/planning.md](docs/planning.md) |
 | **Updates** | Through Claude Code's plugin mechanism, with a health check and automatic backups |
@@ -105,7 +106,26 @@ A marketplace added from a folder receives no automatic updates; run
 
 ### Quick start
 
-In a Claude Code session, with the plugin installed:
+Install once → enable per project → submit with `queue:` → automatic execution.
+
+In a Claude Code session, in a project you trust, turn on Auto Queue once (it shows what
+that means and asks first):
+
+```text
+/moa7amed-queue:auto enable
+queue: Add search to the customer page          <- saved as task #1; a runner starts in the background
+queue: Add an export button to the report       <- saved as task #2; it waits behind #1
+```
+
+Claude Code puts each captured prompt back into the input box: press Esc twice before the
+next message. From a terminal, `moa7amed-queue add "..."` does the same without the prompt
+hook.
+
+Only `queue:` prompts and explicit queue-add requests become tasks; ordinary messages go to
+Claude as before. Without Auto Queue (the default for every project), tasks wait until you
+start a runner. See [docs/auto-queue.md](docs/auto-queue.md).
+
+Manual workflow, in a Claude Code session with the plugin installed:
 
 ```text
 /moa7amed-queue:queue-add Add input validation to the signup form. Acceptance criteria: invalid e-mail addresses are rejected with a message
@@ -277,6 +297,8 @@ tests/                             checks for the marketplace as a whole
 | [GitHub release steps](docs/github-release.md) | The exact steps the owner runs to publish 0.8.0 |
 | [Multi-agent execution](docs/agents.md) | Stage A: when agents run, enforcement, recovery, budgets |
 | [Challenge, discuss, then execute](docs/challenge.md) | Concerns, the owner's decisions, and what they cannot change |
+| [Auto Queue](docs/auto-queue.md) | Opt-in automatic runner per project: consent, pause, stop, idle timeout, allowance |
+| [Directory submission](docs/directory-submission.md) | Listing materials for the Claude plugin directory (prepared, not submitted) |
 | [Changelog](plugins/moa7amed-queue/CHANGELOG.md) | What changed in each version |
 | [Security and privacy](docs/security-and-privacy.md) | What is stored, started and sent |
 | [Contributing](CONTRIBUTING.md) | Where to start |
